@@ -1,0 +1,12 @@
+rules_version = '2';
+
+// All database access for this app goes through the Cloud Function (Admin SDK),
+// which bypasses these rules. Direct client access is denied so that sensitive
+// submission data (names, IDs, bank details) is never readable/writable publicly.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

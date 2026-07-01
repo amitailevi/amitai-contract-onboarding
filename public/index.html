@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>אמיתי לוי יזמות בע"מ | קליטת עובד/ת — חוזה ובנק</title>
+  <link rel="stylesheet" href="./styles.css?v=1">
+</head>
+<body>
+  <header class="site-header">
+    <div class="brand">
+      <div class="logo">AL</div>
+      <div class="brand-text">
+        <strong>אמיתי לוי יזמות בע"מ</strong>
+        <span>טופס קליטה — חוזה ופרטי בנק</span>
+      </div>
+    </div>
+    <div class="header-meta">קליטת עובד/ת · 2026</div>
+  </header>
+
+  <main class="container">
+    <section class="intro">
+      <p class="eyebrow">קליטה מהירה ופשוטה</p>
+      <h1>חוזה עבודה ופרטי בנק במקום אחד</h1>
+      <p class="lead">ממלאים שלב אחר שלב, מגישים — ועותק החוזה נשלח אליכם למייל כקובץ PDF.</p>
+    </section>
+
+    <div class="progress-wrap">
+      <div class="progress-head">
+        <span id="progressLabel">שלב 1 מתוך 6 · פרטי הצדדים</span>
+        <span id="progressPct">17%</span>
+      </div>
+      <div class="progress-bar"><span id="progressFill"></span></div>
+    </div>
+
+    <form id="onboardingForm" class="wizard" autocomplete="on" novalidate>
+      <!-- Step 0: Parties (part 1) -->
+      <section class="step-card" data-step="0">
+        <div class="step-head">
+          <h2>פרטי הצדדים</h2>
+          <p>נתחיל בפרטים הבסיסיים של העובד/ת.</p>
+        </div>
+        <div class="grid">
+          <label class="field">
+            <span>תאריך חתימת החוזה</span>
+            <input name="contractDate" type="date">
+          </label>
+          <label class="field">
+            <span>שם העובד/ת בחוזה <b class="req">*</b></span>
+            <input name="contractEmployeeName" required autocomplete="name">
+          </label>
+          <label class="field">
+            <span>מספר תעודת זהות <b class="req">*</b></span>
+            <input name="contractEmployeeId" inputmode="numeric" required>
+          </label>
+          <label class="field">
+            <span>דואר אלקטרוני (לשליחת החוזה) <b class="req">*</b></span>
+            <input name="email" type="email" inputmode="email" required autocomplete="email">
+          </label>
+        </div>
+      </section>
+
+      <!-- Step 1: Parties (part 2) -->
+      <section class="step-card" data-step="1" hidden>
+        <div class="step-head">
+          <h2>פרטי הצדדים — המשך</h2>
+          <p>כתובת ותפקיד.</p>
+        </div>
+        <div class="grid">
+          <label class="field wide">
+            <span>כתובת העובד/ת בחוזה</span>
+            <input name="contractEmployeeAddress" autocomplete="street-address">
+          </label>
+          <label class="field">
+            <span>תפקיד בחוזה</span>
+            <input name="contractRole" placeholder="לדוגמה: גננת / סייעת / מדריך/ה">
+          </label>
+          <label class="field">
+            <span>מסגרת / מקום עבודה</span>
+            <input name="contractBranch" placeholder="לדוגמה: גן רימון / באר טוביה">
+          </label>
+        </div>
+      </section>
+
+      <!-- Step 2: Employment terms -->
+      <section class="step-card" data-step="2" hidden>
+        <div class="step-head">
+          <h2>תנאי ההעסקה</h2>
+          <p>תקופה, היקף ושכר.</p>
+        </div>
+        <div class="grid">
+          <label class="field">
+            <span>תחילת העסקה</span>
+            <input name="contractStartDate" type="date" value="2025-09-01">
+          </label>
+          <label class="field">
+            <span>סיום העסקה</span>
+            <input name="contractEndDate" type="date" value="2026-06-30">
+          </label>
+          <label class="field">
+            <span>ימי עבודה</span>
+            <input name="workDays" placeholder="לדוגמה: א'-ה'">
+          </label>
+          <label class="field">
+            <span>שעות עבודה</span>
+            <input name="workHours" placeholder="לדוגמה: 13:30-16:30">
+          </label>
+          <label class="field">
+            <span>היקף משרה</span>
+            <input name="positionScope" placeholder="לדוגמה: שעתי / חלקי / לפי שיבוץ">
+          </label>
+          <label class="field">
+            <span>שכר לשעה (₪)</span>
+            <input name="hourlyWage" inputmode="decimal" placeholder="₪">
+          </label>
+          <label class="field">
+            <span>תדירות תשלום</span>
+            <select name="payFrequency">
+              <option value="">בחר/י</option>
+              <option>חודשי</option>
+              <option>דו-שבועי</option>
+              <option>שבועי</option>
+            </select>
+          </label>
+          <label class="field">
+            <span>דמי נסיעות</span>
+            <input name="travelTerms" placeholder="לפי דין / לפי זכאות">
+          </label>
+          <label class="field">
+            <span>הפרשות פנסיוניות</span>
+            <input name="pensionTerms" placeholder="לפי דין">
+          </label>
+          <label class="field">
+            <span>הודעה מוקדמת</span>
+            <input name="noticeTerms" placeholder="לפי דין">
+          </label>
+          <label class="field">
+            <span>תקופת ניסיון</span>
+            <input name="trialPeriod" placeholder="לדוגמה: 30 ימים / ללא">
+          </label>
+          <label class="field">
+            <span>ממונה ישיר/ה</span>
+            <input name="directManager">
+          </label>
+        </div>
+      </section>
+
+      <!-- Step 3: Declarations & signatures -->
+      <section class="step-card" data-step="3" hidden>
+        <div class="step-head">
+          <h2>הצהרות וסעיפים מיוחדים</h2>
+          <p>סימון ההצהרות הרלוונטיות וחתימה.</p>
+        </div>
+        <div class="checks">
+          <label class="check"><input name="contractConfidentiality" type="checkbox"><span>העובד/ת מתחייב/ת לשמירת סודיות ופרטיות הילדים, ההורים והחברה.</span></label>
+          <label class="check"><input name="contractSafety" type="checkbox"><span>העובד/ת מתחייב/ת לפעול לפי נהלי בטיחות, משמעת והנחיות הממונה.</span></label>
+          <label class="check"><input name="contractDocuments" type="checkbox"><span>העובד/ת מסר/ה מסמכים נדרשים לקליטה: פרטי בנק, תעודת זהות ואישורים לפי הצורך.</span></label>
+          <label class="check"><input name="contractTaxConsent" type="checkbox"><span>העובד/ת מאשר/ת שימוש בפרטים לצורכי שכר, מס ודיווחי חובה.</span></label>
+        </div>
+        <div class="grid">
+          <label class="field wide">
+            <span>הערות מיוחדות</span>
+            <textarea name="contractNotes" rows="3" placeholder="לדוגמה: שיבוץ זמני, החלפה, תנאי פעילות, נספחים מיוחדים."></textarea>
+          </label>
+          <label class="field">
+            <span>שם החותם/ת (העובד/ת)</span>
+            <input name="employeeSignatureName">
+          </label>
+          <label class="field">
+            <span>שם נציג/ת החברה</span>
+            <input name="companySignatureName">
+          </label>
+        </div>
+      </section>
+
+      <!-- Step 4: Bank details -->
+      <section class="step-card" data-step="4" hidden>
+        <div class="step-head">
+          <h2>פרטי בנק</h2>
+          <p>לצורך העברת שכר.</p>
+        </div>
+        <div class="grid">
+          <label class="field">
+            <span>שם הבנק</span>
+            <input name="bankName">
+          </label>
+          <label class="field">
+            <span>מספר בנק</span>
+            <input name="bankNumber" inputmode="numeric">
+          </label>
+          <label class="field">
+            <span>מספר סניף</span>
+            <input name="branchNumber" inputmode="numeric">
+          </label>
+          <label class="field">
+            <span>מספר חשבון</span>
+            <input name="accountNumber" inputmode="numeric">
+          </label>
+          <label class="field wide">
+            <span>שם בעל/ת החשבון</span>
+            <input name="accountHolder">
+          </label>
+        </div>
+      </section>
+
+      <!-- Step 5: Summary -->
+      <section class="step-card" data-step="5" hidden>
+        <div class="step-head">
+          <h2>סיכום והגשה</h2>
+          <p>בדקו את תצוגת החוזה, ואז הגישו — עותק PDF יישלח למייל.</p>
+        </div>
+        <div id="contractPreview" class="contract-preview" aria-label="תצוגת חוזה"></div>
+      </section>
+
+      <div class="wizard-nav">
+        <button type="button" class="btn ghost" id="btnBack" hidden>חזרה</button>
+        <button type="button" class="btn primary" id="btnNext">המשך</button>
+      </div>
+
+      <div class="final-actions" id="finalActions" hidden>
+        <button type="button" class="btn primary" id="submitCloud">שמירה והגשה</button>
+        <button type="button" class="btn ghost" id="saveDraft">שמירת טיוטה</button>
+        <button type="button" class="btn ghost" id="printPdf">הדפס / שמור PDF</button>
+        <button type="button" class="btn danger" id="clearDraft">נקה טיוטה</button>
+      </div>
+    </form>
+  </main>
+
+  <footer class="site-footer">
+    אמיתי לוי יזמות בע"מ · טופס קליטה — חוזה ופרטי בנק
+  </footer>
+
+  <script src="./vendor/html2pdf.bundle.min.js"></script>
+  <script src="./app.js?v=1"></script>
+</body>
+</html>
