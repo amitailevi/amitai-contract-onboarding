@@ -112,19 +112,34 @@ function goToStep(n) {
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 function validateStep0() {
-  let ok = true, firstBad = null;
-  REQUIRED_STEP0.forEach(([name]) => {
-    const el = form.elements[name];
-    const bad = !el || !String(el.value || "").trim();
+  const nameEl = form.elements.contractEmployeeName;
+  const idEl = form.elements.contractEmployeeId;
+  const emailEl = form.elements.email;
+  let firstBad = null;
+  const errors = [];
+  const mark = (el, bad) => {
     if (el) el.classList.toggle("invalid", bad);
     if (bad && !firstBad) firstBad = el;
-    if (bad) ok = false;
-  });
-  if (!ok) {
-    toast("יש למלא שם, תעודת זהות ודואר אלקטרוני.");
+  };
+
+  const nameBad = !nameEl.value.trim();
+  mark(nameEl, nameBad);
+  if (nameBad) errors.push("יש למלא שם.");
+
+  const idBad = !/^\d{9}$/.test(idEl.value.trim());
+  mark(idEl, idBad);
+  if (idBad) errors.push("תעודת זהות חייבת להכיל 9 ספרות.");
+
+  const emailBad = !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailEl.value.trim());
+  mark(emailEl, emailBad);
+  if (emailBad) errors.push('כתובת דוא"ל אינה תקינה (לדוגמה: name@example.com).');
+
+  if (errors.length) {
+    toast(errors[0]);
     if (firstBad) firstBad.focus();
+    return false;
   }
-  return ok;
+  return true;
 }
 
 /* ---------------- contract HTML (also the PDF) ----------------
@@ -202,9 +217,10 @@ function renderContractPreview() {
 async function submitContract(button) {
   saveDraft(true);
   const data = getFormData();
-  if (!data.contractEmployeeName || !data.contractEmployeeId || !data.email) {
+  if (!validateStep0()) {
     goToStep(0);
-    validateStep0();
+    const bad = steps[0].querySelector(".invalid");
+    if (bad) bad.focus();
     return;
   }
   const original = button.textContent;
@@ -296,6 +312,24 @@ function setupUpload() {
   });
 }
 
+/* ---------------- step 1 helpers ---------------- */
+function setupStep0() {
+  // ID field: keep it digits-only, max 9.
+  const idEl = form.elements.contractEmployeeId;
+  if (idEl) {
+    idEl.addEventListener("input", () => {
+      const cleaned = idEl.value.replace(/\D/g, "").slice(0, 9);
+      if (cleaned !== idEl.value) idEl.value = cleaned;
+    });
+  }
+  // Default the contract signing date to today (submitter can still change it).
+  const dateEl = form.elements.contractDate;
+  if (dateEl && !dateEl.value) {
+    const d = new Date();
+    dateEl.value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  }
+}
+
 /* ---------------- wiring ---------------- */
 btnNext.addEventListener("click", () => {
   if (currentStep === 0 && !validateStep0()) return;
@@ -316,4 +350,5 @@ try {
   localStorage.removeItem(STORAGE_KEY);
 }
 setupUpload();
+setupStep0();
 goToStep(0);
