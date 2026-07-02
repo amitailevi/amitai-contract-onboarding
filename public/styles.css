@@ -285,6 +285,51 @@ body {
   font-size: .92rem;
 }
 
+/* ---------- Contract terms accordion ---------- */
+.contract-terms { margin: 22px 0; }
+.contract-terms > h3 { margin: 0 0 4px; font-size: 1.15rem; color: var(--primary); }
+.terms-intro { margin: 0 0 14px; color: var(--muted); font-size: .92rem; }
+.clause {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fbfdff;
+  margin-bottom: 10px;
+  overflow: hidden;
+}
+.clause > summary {
+  cursor: pointer;
+  list-style: none;
+  padding: 14px 44px 14px 16px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  transition: background .15s;
+}
+.clause > summary:hover,
+.clause[open] > summary { background: rgba(23, 176, 196, .06); }
+.clause > summary::-webkit-details-marker { display: none; }
+.clause > summary::after {
+  content: "＋";
+  position: absolute;
+  inset-inline-end: 16px;
+  top: 13px;
+  color: var(--accent-dark);
+  font-weight: 800;
+  font-size: 1.2rem;
+}
+.clause[open] > summary::after { content: "－"; }
+.clause-title { font-weight: 700; color: var(--primary); }
+.clause-summary { color: var(--muted); font-size: .9rem; line-height: 1.5; }
+.clause-body {
+  padding: 4px 16px 16px;
+  border-top: 1px solid var(--line);
+  color: #33425c;
+  font-size: .92rem;
+  line-height: 1.7;
+}
+.clause-body p { margin: 10px 0 0; }
+
 /* ---------- Responsive ---------- */
 @media (max-width: 640px) {
   .grid { grid-template-columns: 1fr; }
