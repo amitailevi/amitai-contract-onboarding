@@ -356,11 +356,11 @@ function setupStep1() {
   const sayaat = document.getElementById("roleSayaat");
   if (!roleEl || !gananet || !sayaat) return;
   function updateRole() {
-    const isG = roleEl.value === "גננת";
+    const showCert = roleEl.value === "גננת" || roleEl.value === "מורה";
     const isS = roleEl.value === "סייעת";
-    gananet.hidden = !isG;
+    gananet.hidden = !showCert;
     sayaat.hidden = !isS;
-    if (!isG && form.elements.roleTeachingCert) {
+    if (!showCert && form.elements.roleTeachingCert) {
       Array.from(form.elements.roleTeachingCert).forEach((r) => { r.checked = false; });
     }
     if (!isS && form.elements.roleAssistantType) form.elements.roleAssistantType.value = "";
