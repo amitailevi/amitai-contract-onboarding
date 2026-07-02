@@ -249,6 +249,21 @@ body {
   color: var(--danger); font-weight: 700; font-size: 1.1rem; line-height: 1;
 }
 
+/* ---------- Yes/No toggle ---------- */
+.toggle-btns { display: flex; gap: 10px; }
+.toggle { flex: 1; position: relative; margin: 0; }
+.toggle input { position: absolute; opacity: 0; width: 0; height: 0; }
+.toggle span {
+  display: block; text-align: center; padding: 11px 14px;
+  border: 1.5px solid var(--line); border-radius: 12px;
+  background: #fbfdff; cursor: pointer; font-weight: 700; color: var(--ink);
+  transition: border-color .15s, background .15s, color .15s;
+}
+.toggle input:checked + span {
+  border-color: var(--accent); background: rgba(23, 176, 196, .12); color: var(--accent-dark);
+}
+.toggle input:focus-visible + span { box-shadow: 0 0 0 4px rgba(23, 176, 196, .16); }
+
 /* ---------- Responsive ---------- */
 @media (max-width: 640px) {
   .grid { grid-template-columns: 1fr; }

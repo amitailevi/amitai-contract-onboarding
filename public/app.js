@@ -149,6 +149,7 @@ function validateStep0() {
 function buildContractHtml() {
   const d = getFormData();
   const name = d.contractEmployeeName || "";
+  const address = [d.contractEmployeeAddress, d.contractCity].filter(Boolean).join(", ");
   const NAVY = "#123a6b", TEAL = "#17b0c4", INK = "#111827", MUTED = "#64748b",
     BODY = "#26324a", LINE = "#e5e9f0", DOT = "#cbd5e1", SIGN = "#94a3b8";
 
@@ -157,7 +158,7 @@ function buildContractHtml() {
     + `<div style="font-size:13px;color:${INK};border-bottom:1px dotted ${DOT};min-height:17px">${valueOrLine(val)}</div></td>`;
   const metaRows = [
     ["תאריך חתימה", d.contractDate, "שם העובד/ת", name],
-    ["מספר זהות", d.contractEmployeeId, "כתובת", d.contractEmployeeAddress],
+    ["מספר זהות", d.contractEmployeeId, "כתובת", address],
     ["תפקיד", d.contractRole, "מסגרת / מקום עבודה", d.contractBranch],
     ["ממונה ישיר/ה", d.directManager, "שכר לשעה", d.hourlyWage ? d.hourlyWage + " ₪" : ""]
   ].map((r) => `<tr>${metaCell(r[0], r[1])}${metaCell(r[2], r[3])}</tr>`).join("");
@@ -330,6 +331,44 @@ function setupStep0() {
   }
 }
 
+/* ---------------- step 2 helpers ---------------- */
+const CITIES = [
+  "אום אל-פחם", "אופקים", "אור יהודה", "אור עקיבא", "אילת", "אלעד", "אריאל", "אשדוד", "אשקלון",
+  "באקה אל-גרביה", "באר יעקב", "באר שבע", "בית שאן", "בית שמש", "ביתר עילית", "בני ברק", "בת ים",
+  "גבעת שמואל", "גבעתיים", "גדרה", "דימונה", "הוד השרון", "הרצליה", "זכרון יעקב", "חדרה", "חולון",
+  "חיפה", "טבריה", "טייבה", "טירה", "טירת כרמל", "טמרה", "יבנה", "יהוד-מונוסון", "יקנעם עילית",
+  "ירושלים", "כפר יונה", "כפר סבא", "כפר קאסם", "כרמיאל", "לוד", "מגדל העמק", "מודיעין עילית",
+  "מודיעין-מכבים-רעות", "מעלה אדומים", "מעלות-תרשיחא", "נהריה", "נוף הגליל", "נס ציונה", "נצרת",
+  "נשר", "נתיבות", "נתניה", "סח'נין", "עכו", "עפולה", "עראבה", "ערד", "פרדס חנה-כרכור", "פתח תקווה",
+  "צפת", "קלנסווה", "קצרין", "קרית אונו", "קרית אתא", "קרית ביאליק", "קרית גת", "קרית ים",
+  "קרית מוצקין", "קרית מלאכי", "קרית עקרון", "קרית שמונה", "ראש העין", "ראשון לציון", "רהט",
+  "רחובות", "רמלה", "רמת גן", "רמת השרון", "רעננה", "שדרות", "שוהם", "שפרעם", "תל אביב-יפו"
+];
+function setupStep1() {
+  const dl = document.getElementById("citiesList");
+  if (dl && !dl.childElementCount) {
+    const frag = document.createDocumentFragment();
+    CITIES.forEach((c) => { const o = document.createElement("option"); o.value = c; frag.appendChild(o); });
+    dl.appendChild(frag);
+  }
+  const roleEl = form.elements.contractRole;
+  const gananet = document.getElementById("roleGananet");
+  const sayaat = document.getElementById("roleSayaat");
+  if (!roleEl || !gananet || !sayaat) return;
+  function updateRole() {
+    const isG = roleEl.value === "גננת";
+    const isS = roleEl.value === "סייעת";
+    gananet.hidden = !isG;
+    sayaat.hidden = !isS;
+    if (!isG && form.elements.roleTeachingCert) {
+      Array.from(form.elements.roleTeachingCert).forEach((r) => { r.checked = false; });
+    }
+    if (!isS && form.elements.roleAssistantType) form.elements.roleAssistantType.value = "";
+  }
+  roleEl.addEventListener("change", updateRole);
+  updateRole();
+}
+
 /* ---------------- wiring ---------------- */
 btnNext.addEventListener("click", () => {
   if (currentStep === 0 && !validateStep0()) return;
@@ -351,4 +390,5 @@ try {
 }
 setupUpload();
 setupStep0();
+setupStep1();
 goToStep(0);

@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>אמיתי לוי יזמות בע"מ | קליטת עובד/ת — חוזה ובנק</title>
-  <link rel="stylesheet" href="./styles.css?v=2">
+  <link rel="stylesheet" href="./styles.css?v=3">
 </head>
 <body>
   <header class="site-header">
@@ -67,17 +67,51 @@
           <p>כתובת ותפקיד.</p>
         </div>
         <div class="grid">
-          <label class="field wide">
-            <span>כתובת העובד/ת בחוזה</span>
-            <input name="contractEmployeeAddress" autocomplete="street-address">
+          <label class="field">
+            <span>עיר</span>
+            <input name="contractCity" list="citiesList" autocomplete="off" placeholder="בחר/י או הקלד/י עיר">
+            <datalist id="citiesList"></datalist>
+          </label>
+          <label class="field">
+            <span>כתובת (רחוב ומספר)</span>
+            <input name="contractEmployeeAddress" autocomplete="street-address" placeholder="לדוגמה: הרצל 10">
           </label>
           <label class="field">
             <span>תפקיד בחוזה</span>
-            <input name="contractRole" placeholder="לדוגמה: גננת / סייעת / מדריך/ה">
+            <select name="contractRole">
+              <option value="">בחר/י תפקיד</option>
+              <option>גננת</option>
+              <option>מורה</option>
+              <option>סייעת</option>
+              <option>מדריך/ה</option>
+            </select>
           </label>
           <label class="field">
             <span>מסגרת / מקום עבודה</span>
-            <input name="contractBranch" placeholder="לדוגמה: גן רימון / באר טוביה">
+            <select name="contractBranch">
+              <option value="">בחר/י מסגרת</option>
+              <option>באר טוביה</option>
+              <option>ראש העין</option>
+              <option>רעננה</option>
+              <option>אריאל</option>
+            </select>
+          </label>
+
+          <div class="field wide" id="roleGananet" hidden>
+            <span>האם יש לך תעודת הוראה / תואר ראשון</span>
+            <div class="toggle-btns" role="radiogroup">
+              <label class="toggle"><input type="radio" name="roleTeachingCert" value="כן"><span>כן</span></label>
+              <label class="toggle"><input type="radio" name="roleTeachingCert" value="לא"><span>לא</span></label>
+            </div>
+          </div>
+
+          <label class="field wide" id="roleSayaat" hidden>
+            <span>סוג סייעת</span>
+            <select name="roleAssistantType">
+              <option value="">בחר/י</option>
+              <option>בתי ספר</option>
+              <option>גני ילדים</option>
+            </select>
           </label>
         </div>
       </section>
@@ -239,6 +273,6 @@
     אמיתי לוי יזמות בע"מ · טופס קליטה — חוזה ופרטי בנק
   </footer>
 
-  <script src="./app.js?v=5"></script>
+  <script src="./app.js?v=6"></script>
 </body>
 </html>

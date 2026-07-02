@@ -44,6 +44,7 @@ function money(v) {
 /* ---------------- contract HTML (server-rendered by Chromium) ---------------- */
 function contractInner(d) {
   const name = d.contractEmployeeName || "";
+  const address = [d.contractEmployeeAddress, d.contractCity].filter(Boolean).join(", ");
   const NAVY = "#123a6b", TEAL = "#17b0c4", INK = "#111827", MUTED = "#64748b",
     BODY = "#26324a", LINE = "#e5e9f0", DOT = "#cbd5e1", SIGN = "#94a3b8";
 
@@ -52,7 +53,7 @@ function contractInner(d) {
     + `<div style="font-size:13px;color:${INK};border-bottom:1px dotted ${DOT};min-height:17px">${line(val)}</div></td>`;
   const metaRows = [
     ["תאריך חתימה", d.contractDate, "שם העובד/ת", name],
-    ["מספר זהות", d.contractEmployeeId, "כתובת", d.contractEmployeeAddress],
+    ["מספר זהות", d.contractEmployeeId, "כתובת", address],
     ["תפקיד", d.contractRole, "מסגרת / מקום עבודה", d.contractBranch],
     ["ממונה ישיר/ה", d.directManager, "שכר לשעה", d.hourlyWage ? d.hourlyWage + " ₪" : ""]
   ].map((r) => `<tr>${metaCell(r[0], r[1])}${metaCell(r[2], r[3])}</tr>`).join("");
@@ -189,7 +190,8 @@ const AIRTABLE_TABLE = "tblC2en9pCuXgqpFM";
 const AT = {
   name: "fldvt69i9yDLayDQC", email: "fldX908ZZ7N2EYLQ9", id: "fldkFXmavibrxnArg",
   status: "fldFY7bJRzAcUutWm", pdf: "fldhxAO4H5DMqBPBt", documents: "fldni0BTosxisPWoI",
-  contractDate: "fld91Zt8bsHHOZlAg", address: "fldF8V8L0C2jaiDDJ", role: "fldtiJs3i9DEYgR9P",
+  contractDate: "fld91Zt8bsHHOZlAg", address: "fldF8V8L0C2jaiDDJ", city: "fldbQHUPhP6x9yEBQ",
+  role: "fldtiJs3i9DEYgR9P", teachingCert: "fld58JA2JAdtyM7F8", assistantType: "fldiIM1fu6YMaCjMe",
   branch: "fld6vyCxsV2g65oYk", start: "fldX09TsRHb68LcNZ", end: "fldmunRb2vORi3tJT",
   workDays: "fldmeT1aSryvOjKQX", workHours: "fldAHvJZvAisOK2vZ", scope: "fld2b1YAzylL51Asa",
   wage: "fldJxKqlHD9jsqXVr", payFreq: "fld24noimWMZhMJ1Q", travel: "fldQT9gXfo3PKkFME",
@@ -221,7 +223,10 @@ async function pushToAirtable(d, submissionId, pdfBuffer, pdfFilename, documents
   fields[AT.status] = "חדש";
   put(AT.contractDate, d.contractDate);
   put(AT.address, d.contractEmployeeAddress);
+  put(AT.city, d.contractCity);
   put(AT.role, d.contractRole);
+  put(AT.teachingCert, d.roleTeachingCert);
+  put(AT.assistantType, d.roleAssistantType);
   put(AT.branch, d.contractBranch);
   put(AT.start, d.contractStartDate);
   put(AT.end, d.contractEndDate);
