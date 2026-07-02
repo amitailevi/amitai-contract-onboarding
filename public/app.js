@@ -107,6 +107,7 @@ function goToStep(n) {
   const onLast = currentStep === LAST_STEP;
   btnNext.hidden = onLast;
   finalActions.hidden = !onLast;
+  recomputeDerived();
   if (onLast) renderContractPreview();
   updateProgress();
   window.scrollTo({ top: 0, behavior: "smooth" });
@@ -169,10 +170,9 @@ function buildContractHtml() {
   const clauses = [
     ["מהות התפקיד", `העובד/ת יועסק/ת בתפקיד ${valueOrLine(d.contractRole)} במסגרת ${valueOrLine(d.contractBranch)} או בכל מסגרת אחרת שתיקבע על ידי החברה בהתאם לצורכי העבודה.`],
     ["תקופת ההעסקה", `תקופת ההסכם תחל ביום ${valueOrLine(d.contractStartDate)} ותסתיים ביום ${valueOrLine(d.contractEndDate)}, אלא אם יוסכם אחרת בכתב או בהתאם לדין.`],
-    ["היקף עבודה", `ימי העבודה יהיו ${valueOrLine(d.workDays)} ושעות העבודה יהיו ${valueOrLine(d.workHours)}. היקף המשרה: ${valueOrLine(d.positionScope)}.`],
-    ["שכר ותשלום", `השכר יהיה ${formatMoney(d.hourlyWage)} לשעה, וישולם ${valueOrLine(d.payFrequency)} בכפוף לדיווחי נוכחות, הוראות הדין וניכויי חובה.`],
-    ["נסיעות ותנאים סוציאליים", `דמי נסיעות: ${valueOrLine(d.travelTerms)}. הפרשות פנסיוניות: ${valueOrLine(d.pensionTerms)}.`],
-    ["הודעה מוקדמת ותקופת ניסיון", `הודעה מוקדמת: ${valueOrLine(d.noticeTerms)}. תקופת ניסיון: ${valueOrLine(d.trialPeriod)}.`],
+    ["שעות עבודה", `שעות העבודה יהיו ${valueOrLine(d.workHours)}.`],
+    ["שכר ותשלום", `השכר יהיה ${formatMoney(d.hourlyWage)} לשעה, וישולם בכפוף לדיווחי נוכחות, הוראות הדין וניכויי חובה.`],
+    ["נסיעות, פנסיה והודעה מוקדמת", `דמי נסיעות, הפרשות פנסיוניות והודעה מוקדמת יינתנו על פי דין.`],
     ["נהלים וסודיות", `העובד/ת מתחייב/ת לפעול בהתאם להוראות החברה, לשמור על סודיות, פרטיות ובטיחות, ולהימנע ממסירת מידע על ילדים, הורים, עובדים או פעילות החברה לצד שלישי.`]
   ].map(([t, b]) => clause(t, b)).join("");
 
@@ -365,8 +365,51 @@ function setupStep1() {
     }
     if (!isS && form.elements.roleAssistantType) form.elements.roleAssistantType.value = "";
   }
-  roleEl.addEventListener("change", updateRole);
+  roleEl.addEventListener("change", () => { updateRole(); recomputeDerived(); });
+  const branchEl = form.elements.contractBranch;
+  const frameworkEl = form.elements.roleAssistantType;
+  if (branchEl) branchEl.addEventListener("change", recomputeDerived);
+  if (frameworkEl) frameworkEl.addEventListener("change", recomputeDerived);
+  if (form.elements.roleTeachingCert) {
+    Array.from(form.elements.roleTeachingCert).forEach((r) => r.addEventListener("change", recomputeDerived));
+  }
   updateRole();
+  recomputeDerived();
+}
+
+// Step 3 auto-computed values, derived from the earlier selections.
+function recomputeDerived() {
+  if (!form || !form.elements.contractRole) return;
+  const role = form.elements.contractRole.value;
+  const framework = form.elements.roleAssistantType ? form.elements.roleAssistantType.value : "";
+  const branch = form.elements.contractBranch ? form.elements.contractBranch.value : "";
+  const cert = form.elements.roleTeachingCert ? (form.elements.roleTeachingCert.value || "") : "";
+
+  // Work hours by role.
+  let hours = "";
+  if (role === "מורה") hours = "08:00-13:00";
+  else if (role === "גננת" || role === "סייעת") hours = "07:30-13:00";
+  if (form.elements.workHours) form.elements.workHours.value = hours;
+
+  // Hourly wage by role + teaching certificate.
+  let wage = "";
+  if (role === "גננת" || role === "מורה") {
+    if (cert === "כן") wage = "75";
+    else if (cert === "לא") wage = "60";
+  } else if (role === "סייעת") {
+    wage = "45";
+  }
+  if (form.elements.hourlyWage) form.elements.hourlyWage.value = wage;
+
+  // Direct manager by workplace + framework (auto-set only for the defined rules).
+  const mgrEl = form.elements.directManager;
+  if (mgrEl) {
+    let mgr = null;
+    if (branch === "באר טוביה" && framework === "גני ילדים") mgr = "ימית יוסף";
+    else if (branch === "באר טוביה" && framework === "בתי ספר") mgr = "רגינה חסון";
+    else if (branch === "ראש העין") mgr = "בת אל קגל";
+    if (mgr) mgrEl.value = mgr;
+  }
 }
 
 /* ---------------- wiring ---------------- */

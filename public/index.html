@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>אמיתי לוי יזמות בע"מ | קליטת עובד/ת — חוזה ובנק</title>
-  <link rel="stylesheet" href="./styles.css?v=4">
+  <link rel="stylesheet" href="./styles.css?v=5">
 </head>
 <body>
   <header class="site-header">
@@ -120,63 +120,37 @@
       <section class="step-card" data-step="2" hidden>
         <div class="step-head">
           <h2>תנאי ההעסקה</h2>
-          <p>תקופה, היקף ושכר.</p>
+          <p>תקופה, שעות ושכר.</p>
         </div>
         <div class="grid">
           <label class="field">
             <span>תחילת העסקה</span>
-            <input name="contractStartDate" type="date" value="2025-09-01">
+            <input name="contractStartDate" type="date" value="2026-07-01">
           </label>
           <label class="field">
             <span>סיום העסקה</span>
-            <input name="contractEndDate" type="date" value="2026-06-30">
-          </label>
-          <label class="field">
-            <span>ימי עבודה</span>
-            <input name="workDays" placeholder="לדוגמה: א'-ה'">
+            <input name="contractEndDate" type="date" value="2026-07-30">
           </label>
           <label class="field">
             <span>שעות עבודה</span>
-            <input name="workHours" placeholder="לדוגמה: 13:30-16:30">
-          </label>
-          <label class="field">
-            <span>היקף משרה</span>
-            <input name="positionScope" placeholder="לדוגמה: שעתי / חלקי / לפי שיבוץ">
+            <input name="workHours" readonly placeholder="ייקבע לפי התפקיד">
           </label>
           <label class="field">
             <span>שכר לשעה (₪)</span>
-            <input name="hourlyWage" inputmode="decimal" placeholder="₪">
-          </label>
-          <label class="field">
-            <span>תדירות תשלום</span>
-            <select name="payFrequency">
-              <option value="">בחר/י</option>
-              <option>חודשי</option>
-              <option>דו-שבועי</option>
-              <option>שבועי</option>
-            </select>
-          </label>
-          <label class="field">
-            <span>דמי נסיעות</span>
-            <input name="travelTerms" placeholder="לפי דין / לפי זכאות">
-          </label>
-          <label class="field">
-            <span>הפרשות פנסיוניות</span>
-            <input name="pensionTerms" placeholder="לפי דין">
-          </label>
-          <label class="field">
-            <span>הודעה מוקדמת</span>
-            <input name="noticeTerms" placeholder="לפי דין">
-          </label>
-          <label class="field">
-            <span>תקופת ניסיון</span>
-            <input name="trialPeriod" placeholder="לדוגמה: 30 ימים / ללא">
+            <input name="hourlyWage" readonly placeholder="ייקבע אוטומטית">
           </label>
           <label class="field">
             <span>ממונה ישיר/ה</span>
-            <input name="directManager">
+            <select name="directManager">
+              <option value="">בחר/י</option>
+              <option>בת אל קגל</option>
+              <option>רגינה חסון</option>
+              <option>ימית יוסף</option>
+              <option>אחר</option>
+            </select>
           </label>
         </div>
+        <p class="terms-note">דמי נסיעות, הפרשות פנסיוניות והודעה מוקדמת יינתנו על פי דין.</p>
       </section>
 
       <!-- Step 3: Declarations & signatures -->
@@ -273,6 +247,6 @@
     אמיתי לוי יזמות בע"מ · טופס קליטה — חוזה ופרטי בנק
   </footer>
 
-  <script src="./app.js?v=7"></script>
+  <script src="./app.js?v=8"></script>
 </body>
 </html>
