@@ -183,6 +183,91 @@ async function sendContractCopy({ email, fullName, submissionId, mailAttachments
   }
 }
 
+/* ---------------- Airtable back-office ---------------- */
+const AIRTABLE_BASE = "app8yycUBnh8Hrlqo";
+const AIRTABLE_TABLE = "tblC2en9pCuXgqpFM";
+const AT = {
+  name: "fldvt69i9yDLayDQC", email: "fldX908ZZ7N2EYLQ9", id: "fldkFXmavibrxnArg",
+  status: "fldFY7bJRzAcUutWm", pdf: "fldhxAO4H5DMqBPBt",
+  contractDate: "fld91Zt8bsHHOZlAg", address: "fldF8V8L0C2jaiDDJ", role: "fldtiJs3i9DEYgR9P",
+  branch: "fld6vyCxsV2g65oYk", start: "fldX09TsRHb68LcNZ", end: "fldmunRb2vORi3tJT",
+  workDays: "fldmeT1aSryvOjKQX", workHours: "fldAHvJZvAisOK2vZ", scope: "fld2b1YAzylL51Asa",
+  wage: "fldJxKqlHD9jsqXVr", payFreq: "fld24noimWMZhMJ1Q", travel: "fldQT9gXfo3PKkFME",
+  pension: "fldhxScNjh77vH73Q", notice: "flduJKMR1gRDMwJkC", trial: "fldACCwY3EDBmPV2H",
+  manager: "fldqWOy83KS3wkRmO", declarations: "fldjIg8C9zDfBejuy", notes: "fldZoZX1pjFKLHT0X",
+  bankName: "fldsCJ0IizdSXD41N", bankNum: "fldeGthiRLTglnGLk", branchNum: "fldc76U6VED20dQRe",
+  account: "fldfDOVR4fg05ICAA", accountHolder: "fldKuIaouhxDZaonD", subId: "fldAxS1C6vNM1VTno",
+  sentAt: "fldIdrkNzui31iKsh"
+};
+
+// Create the Airtable row and attach the contract PDF. Never throws — a back-office
+// failure must not break the submission/email.
+async function pushToAirtable(d, submissionId, pdfBuffer, pdfFilename) {
+  const token = process.env.AIRTABLE_TOKEN;
+  if (!token) { console.log("AIRTABLE_TOKEN not set — skipping Airtable push"); return; }
+
+  const decl = [
+    d.contractConfidentiality && "שמירת סודיות ופרטיות",
+    d.contractSafety && "נהלי בטיחות ומשמעת",
+    d.contractDocuments && "מסירת מסמכי קליטה",
+    d.contractTaxConsent && "שימוש בפרטים לצורכי שכר ומס"
+  ].filter(Boolean).join("\n");
+
+  const fields = {};
+  const put = (id, val) => { if (val !== undefined && val !== null && String(val).trim() !== "") fields[id] = val; };
+  put(AT.name, d.contractEmployeeName);
+  put(AT.email, d.email);
+  put(AT.id, d.contractEmployeeId);
+  fields[AT.status] = "חדש";
+  put(AT.contractDate, d.contractDate);
+  put(AT.address, d.contractEmployeeAddress);
+  put(AT.role, d.contractRole);
+  put(AT.branch, d.contractBranch);
+  put(AT.start, d.contractStartDate);
+  put(AT.end, d.contractEndDate);
+  put(AT.workDays, d.workDays);
+  put(AT.workHours, d.workHours);
+  put(AT.scope, d.positionScope);
+  const wageNum = d.hourlyWage ? Number(String(d.hourlyWage).replace(/[^\d.]/g, "")) : NaN;
+  if (!isNaN(wageNum)) fields[AT.wage] = wageNum;
+  put(AT.payFreq, d.payFrequency);
+  put(AT.travel, d.travelTerms);
+  put(AT.pension, d.pensionTerms);
+  put(AT.notice, d.noticeTerms);
+  put(AT.trial, d.trialPeriod);
+  put(AT.manager, d.directManager);
+  put(AT.declarations, decl);
+  put(AT.notes, d.contractNotes);
+  put(AT.bankName, d.bankName);
+  put(AT.bankNum, d.bankNumber);
+  put(AT.branchNum, d.branchNumber);
+  put(AT.account, d.accountNumber);
+  put(AT.accountHolder, d.accountHolder);
+  put(AT.subId, submissionId);
+  fields[AT.sentAt] = new Date().toISOString();
+
+  const createRes = await fetch(`https://api.airtable.com/v0/${AIRTABLE_BASE}/${AIRTABLE_TABLE}`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ fields, typecast: true })
+  });
+  if (!createRes.ok) {
+    console.error("Airtable create failed:", createRes.status, await createRes.text());
+    return;
+  }
+  const rec = await createRes.json();
+
+  if (pdfBuffer && rec.id) {
+    const upRes = await fetch(`https://content.airtable.com/v0/${AIRTABLE_BASE}/${rec.id}/${AT.pdf}/uploadAttachment`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ contentType: "application/pdf", filename: pdfFilename || "Contract.pdf", file: pdfBuffer.toString("base64") })
+    });
+    if (!upRes.ok) console.error("Airtable attachment upload failed:", upRes.status, await upRes.text());
+  }
+  return rec.id;
+}
+
 /* ---------------- routes ---------------- */
 app.post("/api/contract-submissions", async (req, res) => {
   try {
@@ -210,18 +295,18 @@ app.post("/api/contract-submissions", async (req, res) => {
       updatedAt: now
     });
 
-    // Generate the contract PDF server-side (real Chromium).
-    let mailAttachments = [];
+    // Generate the contract PDF server-side (real Chromium) — used for both the
+    // email attachment and the Airtable back-office record.
+    const pdfFilename = `Contract-${idNum || "employee"}.pdf`;
+    let pdfBuffer = null;
     try {
-      const pdfBuffer = await renderContractPdf(formData);
-      mailAttachments = [{
-        filename: `Contract-${idNum || "employee"}.pdf`,
-        content: pdfBuffer,
-        contentType: "application/pdf"
-      }];
+      pdfBuffer = await renderContractPdf(formData);
     } catch (e) {
       console.error("Contract PDF render failed:", e);
     }
+    const mailAttachments = pdfBuffer
+      ? [{ filename: pdfFilename, content: pdfBuffer, contentType: "application/pdf" }]
+      : [];
 
     const mailResult = await sendContractCopy({
       email: formData.email,
@@ -230,7 +315,15 @@ app.post("/api/contract-submissions", async (req, res) => {
       mailAttachments
     });
 
-    res.json({ ok: true, submissionId: submissionRef.id, mail: mailResult });
+    // Push to the Airtable back office (non-fatal if it fails).
+    let airtableRecordId = null;
+    try {
+      airtableRecordId = await pushToAirtable(formData, submissionRef.id, pdfBuffer, pdfFilename);
+    } catch (e) {
+      console.error("Airtable push failed:", e);
+    }
+
+    res.json({ ok: true, submissionId: submissionRef.id, mail: mailResult, airtable: Boolean(airtableRecordId) });
   } catch (error) {
     console.error(error);
     res.status(error.status || 500).json({ ok: false, error: error.message || "Internal server error" });
@@ -238,5 +331,5 @@ app.post("/api/contract-submissions", async (req, res) => {
 });
 
 exports.api = functions
-  .runWith({ memory: "1GB", timeoutSeconds: 120, secrets: ["SMTP_PASS"] })
+  .runWith({ memory: "1GB", timeoutSeconds: 120, secrets: ["SMTP_PASS", "AIRTABLE_TOKEN"] })
   .https.onRequest(app);
