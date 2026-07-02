@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>אמיתי לוי יזמות בע"מ | קליטת עובד/ת — חוזה ובנק</title>
-  <link rel="stylesheet" href="./styles.css?v=1">
+  <link rel="stylesheet" href="./styles.css?v=2">
 </head>
 <body>
   <header class="site-header">
@@ -201,6 +201,15 @@
             <input name="accountHolder">
           </label>
         </div>
+
+        <div class="upload-field">
+          <input type="file" id="bankApprovalInput" accept="image/*,application/pdf" hidden>
+          <div class="upload-row">
+            <button type="button" class="btn ghost btn-upload" id="bankApprovalBtn">📎 בחר/י קובץ</button>
+            <span class="upload-hint">העלאת אישור ניהול חשבון - לא חובה</span>
+          </div>
+          <div class="upload-name" id="bankApprovalName" hidden></div>
+        </div>
       </section>
 
       <!-- Step 5: Summary -->
@@ -230,6 +239,6 @@
     אמיתי לוי יזמות בע"מ · טופס קליטה — חוזה ופרטי בנק
   </footer>
 
-  <script src="./app.js?v=3"></script>
+  <script src="./app.js?v=4"></script>
 </body>
 </html>

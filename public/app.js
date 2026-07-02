@@ -27,6 +27,8 @@ const REQUIRED_STEP0 = [
 ];
 
 let currentStep = 0;
+let bankApprovalFile = null;
+const MAX_UPLOAD_BYTES = 5 * 1024 * 1024; // 5MB
 
 /* ---------------- helpers ---------------- */
 function escapeHtml(value) {
@@ -209,10 +211,23 @@ async function submitContract(button) {
   button.disabled = true;
   button.textContent = "מכין חוזה ושולח...";
   try {
+    let documents = [];
+    if (bankApprovalFile) {
+      try {
+        const contentBase64 = await fileToBase64(bankApprovalFile);
+        documents = [{
+          filename: bankApprovalFile.name,
+          contentType: bankApprovalFile.type || "application/octet-stream",
+          contentBase64
+        }];
+      } catch (e) {
+        console.error("file read failed:", e);
+      }
+    }
     const response = await fetch("/api/contract-submissions", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ source: "contract-onboarding-web", formData: data })
+      body: JSON.stringify({ source: "contract-onboarding-web", formData: data, documents })
     });
     const result = await response.json();
     if (!response.ok || !result.ok) throw new Error(result.error || "שמירה נכשלה");
@@ -235,6 +250,52 @@ function printContract() {
   setTimeout(() => summary.removeAttribute("data-print"), 500);
 }
 
+/* ---------------- upload (bank account approval) ---------------- */
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result).split(",")[1]);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+function setupUpload() {
+  const input = document.getElementById("bankApprovalInput");
+  const btn = document.getElementById("bankApprovalBtn");
+  const nameEl = document.getElementById("bankApprovalName");
+  if (!input || !btn || !nameEl) return;
+
+  function clearFile() {
+    bankApprovalFile = null;
+    input.value = "";
+    nameEl.hidden = true;
+    nameEl.textContent = "";
+  }
+
+  btn.addEventListener("click", () => input.click());
+  input.addEventListener("change", () => {
+    const file = input.files && input.files[0];
+    if (!file) return;
+    if (file.size > MAX_UPLOAD_BYTES) {
+      toast("הקובץ גדול מדי — עד 5MB.");
+      clearFile();
+      return;
+    }
+    bankApprovalFile = file;
+    nameEl.hidden = false;
+    nameEl.textContent = "";
+    const label = document.createElement("span");
+    label.textContent = "📄 " + file.name;
+    const remove = document.createElement("button");
+    remove.type = "button";
+    remove.title = "הסר קובץ";
+    remove.textContent = "✕";
+    remove.addEventListener("click", clearFile);
+    nameEl.appendChild(label);
+    nameEl.appendChild(remove);
+  });
+}
+
 /* ---------------- wiring ---------------- */
 btnNext.addEventListener("click", () => {
   if (currentStep === 0 && !validateStep0()) return;
@@ -254,4 +315,5 @@ try {
 } catch (_) {
   localStorage.removeItem(STORAGE_KEY);
 }
+setupUpload();
 goToStep(0);

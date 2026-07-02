@@ -225,6 +225,30 @@ body {
 .pdf-stage { width: 794px; background: #fff; direction: rtl; }
 .pdf-stage .contract-paper { border: none; }
 
+/* ---------- Upload field ---------- */
+.upload-field {
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px dashed var(--line);
+}
+.upload-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.btn-upload { padding: 10px 18px; }
+.upload-hint { color: var(--muted); font-size: .92rem; }
+.upload-name {
+  margin-top: 10px;
+  display: flex; align-items: center; gap: 10px;
+  background: rgba(23, 176, 196, .08);
+  border: 1px solid rgba(23, 176, 196, .3);
+  border-radius: 10px;
+  padding: 8px 12px;
+  font-size: .9rem; color: var(--primary);
+}
+.upload-name button {
+  margin-inline-start: auto;
+  border: none; background: transparent; cursor: pointer;
+  color: var(--danger); font-weight: 700; font-size: 1.1rem; line-height: 1;
+}
+
 /* ---------- Responsive ---------- */
 @media (max-width: 640px) {
   .grid { grid-template-columns: 1fr; }

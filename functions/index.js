@@ -16,7 +16,7 @@ const FONT_B64 = fs.readFileSync(path.join(__dirname, "fonts", "NotoSansHebrew.t
 
 const app = express();
 app.use(cors({ origin: true }));
-app.use(express.json({ limit: "2mb" }));
+app.use(express.json({ limit: "12mb" }));
 
 /* ---------------- helpers ---------------- */
 function requireField(data, key, label) {
@@ -188,7 +188,7 @@ const AIRTABLE_BASE = "app8yycUBnh8Hrlqo";
 const AIRTABLE_TABLE = "tblC2en9pCuXgqpFM";
 const AT = {
   name: "fldvt69i9yDLayDQC", email: "fldX908ZZ7N2EYLQ9", id: "fldkFXmavibrxnArg",
-  status: "fldFY7bJRzAcUutWm", pdf: "fldhxAO4H5DMqBPBt",
+  status: "fldFY7bJRzAcUutWm", pdf: "fldhxAO4H5DMqBPBt", documents: "fldni0BTosxisPWoI",
   contractDate: "fld91Zt8bsHHOZlAg", address: "fldF8V8L0C2jaiDDJ", role: "fldtiJs3i9DEYgR9P",
   branch: "fld6vyCxsV2g65oYk", start: "fldX09TsRHb68LcNZ", end: "fldmunRb2vORi3tJT",
   workDays: "fldmeT1aSryvOjKQX", workHours: "fldAHvJZvAisOK2vZ", scope: "fld2b1YAzylL51Asa",
@@ -202,7 +202,7 @@ const AT = {
 
 // Create the Airtable row and attach the contract PDF. Never throws — a back-office
 // failure must not break the submission/email.
-async function pushToAirtable(d, submissionId, pdfBuffer, pdfFilename) {
+async function pushToAirtable(d, submissionId, pdfBuffer, pdfFilename, documents) {
   const token = process.env.AIRTABLE_TOKEN;
   if (!token) { console.log("AIRTABLE_TOKEN not set — skipping Airtable push"); return; }
 
@@ -257,13 +257,25 @@ async function pushToAirtable(d, submissionId, pdfBuffer, pdfFilename) {
   }
   const rec = await createRes.json();
 
-  if (pdfBuffer && rec.id) {
-    const upRes = await fetch(`https://content.airtable.com/v0/${AIRTABLE_BASE}/${rec.id}/${AT.pdf}/uploadAttachment`, {
+  if (!rec.id) return;
+
+  // uploadAttachment adds one file per call and appends to the field.
+  async function upload(fieldId, contentType, filename, base64) {
+    const r = await fetch(`https://content.airtable.com/v0/${AIRTABLE_BASE}/${rec.id}/${fieldId}/uploadAttachment`, {
       method: "POST",
       headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ contentType: "application/pdf", filename: pdfFilename || "Contract.pdf", file: pdfBuffer.toString("base64") })
+      body: JSON.stringify({ contentType, filename, file: base64 })
     });
-    if (!upRes.ok) console.error("Airtable attachment upload failed:", upRes.status, await upRes.text());
+    if (!r.ok) console.error("Airtable upload failed:", fieldId, r.status, await r.text());
+  }
+
+  if (pdfBuffer) {
+    await upload(AT.pdf, "application/pdf", pdfFilename || "Contract.pdf", pdfBuffer.toString("base64"));
+  }
+  for (const doc of (Array.isArray(documents) ? documents : [])) {
+    if (doc && doc.contentBase64 && doc.filename) {
+      await upload(AT.documents, doc.contentType || "application/octet-stream", doc.filename, doc.contentBase64);
+    }
   }
   return rec.id;
 }
@@ -318,7 +330,10 @@ app.post("/api/contract-submissions", async (req, res) => {
     // Push to the Airtable back office (non-fatal if it fails).
     let airtableRecordId = null;
     try {
-      airtableRecordId = await pushToAirtable(formData, submissionRef.id, pdfBuffer, pdfFilename);
+      airtableRecordId = await pushToAirtable(
+        formData, submissionRef.id, pdfBuffer, pdfFilename,
+        Array.isArray(body.documents) ? body.documents : []
+      );
     } catch (e) {
       console.error("Airtable push failed:", e);
     }
