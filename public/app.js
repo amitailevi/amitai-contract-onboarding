@@ -265,7 +265,12 @@ async function submitContract(button) {
   button.disabled = true;
   button.textContent = "מכין חוזה ושולח...";
   const overlay = document.getElementById("submitOverlay");
+  const loadingCard = document.getElementById("overlayLoading");
+  const successCard = document.getElementById("overlaySuccess");
+  const successMsg = document.getElementById("overlaySuccessMsg");
   if (overlay) overlay.hidden = false;
+  if (loadingCard) loadingCard.hidden = false;
+  if (successCard) successCard.hidden = true;
   try {
     let documents = [];
     if (bankApprovalFile) {
@@ -287,14 +292,19 @@ async function submitContract(button) {
     });
     const result = await response.json();
     if (!response.ok || !result.ok) throw new Error(result.error || "שמירה נכשלה");
-    toast(`נשלח בהצלחה! מספר קליטה: ${result.submissionId}`);
-    alert(`נשמר ונשלח בהצלחה.\nעותק החוזה נשלח למייל: ${data.email}\nמספר קליטה: ${result.submissionId}`);
+    // Success: swap the overlay from the "please wait" spinner to a confirmation
+    // message, and leave it up — the submitter is told they may close the window.
+    if (successMsg) {
+      successMsg.textContent = `החוזה נשלח למייל ${data.email}. מספר קליטה: ${result.submissionId}. ניתן לסגור את החלון.`;
+    }
+    if (loadingCard) loadingCard.hidden = true;
+    if (successCard) successCard.hidden = false;
+    button.textContent = original;
   } catch (error) {
-    alert(`שליחה נכשלה.\n\n${error.message}`);
-  } finally {
+    if (overlay) overlay.hidden = true;
     button.disabled = false;
     button.textContent = original;
-    if (overlay) overlay.hidden = true;
+    alert(`שליחה נכשלה.\n\n${error.message}`);
   }
 }
 
@@ -394,6 +404,7 @@ function setupStep1() {
   const shiftEl = form.elements.workShift;
   const roleEl = form.elements.contractRole;
   const role2El = form.elements.contractRole2;
+  const roleRow = document.getElementById("roleRow");
   const roleField1 = document.getElementById("roleField1");
   const roleField2 = document.getElementById("roleField2");
   const roleLabel1 = document.getElementById("roleLabel1");
@@ -413,6 +424,8 @@ function setupStep1() {
   function updateShiftRoles() {
     const shift = shiftEl.value;
     const both = shift === BOTH_SHIFTS;
+    // Role row wrapper: hidden until a shift is chosen.
+    if (roleRow) roleRow.hidden = !shift;
     // Role field 1: hidden until a shift is chosen; label depends on the shift.
     roleField1.hidden = !shift;
     if (!shift) roleEl.value = "";
@@ -492,17 +505,18 @@ function recomputeDerived() {
   const wageField2 = document.getElementById("wageField2");
   const sub1 = document.getElementById("wageSub1");
   const sub2 = document.getElementById("wageSub2");
+  const setSub = (el, text) => { if (el) { el.textContent = text; el.hidden = !text; } };
   if (form.elements.hourlyWage) form.elements.hourlyWage.value = roleWage(role, cert);
   if (both) {
     if (form.elements.hourlyWage2) form.elements.hourlyWage2.value = roleWage(role2, cert);
     if (wageField2) wageField2.hidden = false;
-    if (sub1) sub1.textContent = role ? `עבור שעות עבודה כ${role}` : "";
-    if (sub2) sub2.textContent = role2 ? `עבור שעות עבודה כ${role2}` : "";
+    setSub(sub1, role ? `עבור שעות עבודה כ${role}` : "");
+    setSub(sub2, role2 ? `עבור שעות עבודה כ${role2}` : "");
   } else {
     if (form.elements.hourlyWage2) form.elements.hourlyWage2.value = "";
     if (wageField2) wageField2.hidden = true;
-    if (sub1) sub1.textContent = "";
-    if (sub2) sub2.textContent = "";
+    setSub(sub1, "");
+    setSub(sub2, "");
   }
 
   // Direct manager by workplace + framework (auto-set only for the defined rules).

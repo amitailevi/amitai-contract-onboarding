@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>אמיתי לוי יזמות בע"מ | קליטת עובד/ת — חוזה ובנק</title>
-  <link rel="stylesheet" href="./styles.css?v=9">
+  <link rel="stylesheet" href="./styles.css?v=10">
 </head>
 <body>
   <header class="site-header">
@@ -77,35 +77,6 @@
             <input name="contractEmployeeAddress" autocomplete="street-address" placeholder="לדוגמה: הרצל 10">
           </label>
           <label class="field">
-            <span>עובד/ת בקייטנה ו/או בצהרון?</span>
-            <select name="workShift">
-              <option value="">בחר/י</option>
-              <option>רק בקייטנה</option>
-              <option>רק בצהרון</option>
-              <option>גם בקייטנה וגם בצהרון</option>
-            </select>
-          </label>
-          <label class="field" id="roleField1" hidden>
-            <span id="roleLabel1">תפקיד</span>
-            <select name="contractRole">
-              <option value="">בחר/י תפקיד</option>
-              <option>גננת</option>
-              <option>מורה</option>
-              <option>סייעת</option>
-              <option>מדריך/ה</option>
-            </select>
-          </label>
-          <label class="field" id="roleField2" hidden>
-            <span>תפקיד בצהרון</span>
-            <select name="contractRole2">
-              <option value="">בחר/י תפקיד</option>
-              <option>גננת</option>
-              <option>מורה</option>
-              <option>סייעת</option>
-              <option>מדריך/ה</option>
-            </select>
-          </label>
-          <label class="field">
             <span>מסגרת / מקום עבודה</span>
             <select name="contractBranch">
               <option value="">בחר/י מסגרת</option>
@@ -115,6 +86,37 @@
               <option>אריאל</option>
             </select>
           </label>
+          <label class="field">
+            <span>עובד/ת בקייטנה ו/או בצהרון?</span>
+            <select name="workShift">
+              <option value="">בחר/י</option>
+              <option>רק בקייטנה</option>
+              <option>רק בצהרון</option>
+              <option>גם בקייטנה וגם בצהרון</option>
+            </select>
+          </label>
+          <div class="field wide role-row" id="roleRow" hidden>
+            <label class="field" id="roleField1" hidden>
+              <span id="roleLabel1">תפקיד</span>
+              <select name="contractRole">
+                <option value="">בחר/י תפקיד</option>
+                <option>גננת</option>
+                <option>מורה</option>
+                <option>סייעת</option>
+                <option>מדריך/ה</option>
+              </select>
+            </label>
+            <label class="field" id="roleField2" hidden>
+              <span>תפקיד בצהרון</span>
+              <select name="contractRole2">
+                <option value="">בחר/י תפקיד</option>
+                <option>גננת</option>
+                <option>מורה</option>
+                <option>סייעת</option>
+                <option>מדריך/ה</option>
+              </select>
+            </label>
+          </div>
 
           <div class="field wide" id="roleGananet" hidden>
             <span>האם יש לך תעודת הוראה / תואר ראשון</span>
@@ -156,13 +158,13 @@
           </label>
           <label class="field">
             <span>שכר לשעה (₪)</span>
-            <input name="hourlyWage" readonly placeholder="ייקבע אוטומטית">
             <small class="field-sub" id="wageSub1"></small>
+            <input name="hourlyWage" readonly placeholder="ייקבע אוטומטית">
           </label>
           <label class="field" id="wageField2" hidden>
             <span>שכר לשעה — צהרון (₪)</span>
-            <input name="hourlyWage2" readonly placeholder="ייקבע אוטומטית">
             <small class="field-sub" id="wageSub2"></small>
+            <input name="hourlyWage2" readonly placeholder="ייקבע אוטומטית">
           </label>
           <label class="field">
             <span>ממונה ישיר/ה</span>
@@ -471,10 +473,12 @@
       </div>
 
       <div class="final-actions" id="finalActions" hidden>
-        <button type="button" class="btn primary" id="submitCloud">שמירה והגשה</button>
-        <button type="button" class="btn ghost" id="saveDraft">שמירת טיוטה</button>
-        <button type="button" class="btn ghost" id="printPdf">הדפס / שמור PDF</button>
-        <button type="button" class="btn danger" id="clearDraft">נקה טיוטה</button>
+        <button type="button" class="btn primary submit-main" id="submitCloud">שמירה והגשה</button>
+        <div class="final-secondary">
+          <button type="button" class="btn ghost" id="saveDraft">שמירת טיוטה</button>
+          <button type="button" class="btn ghost" id="printPdf">הדפס / שמור PDF</button>
+          <button type="button" class="btn danger" id="clearDraft">נקה טיוטה</button>
+        </div>
       </div>
     </form>
   </main>
@@ -484,13 +488,18 @@
   </footer>
 
   <div class="overlay" id="submitOverlay" hidden role="alert" aria-live="assertive">
-    <div class="overlay-card">
+    <div class="overlay-card" id="overlayLoading">
       <div class="spinner"></div>
       <h3>מכינים את החוזה ושולחים…</h3>
       <p>הפעולה עשויה להימשך מספר שניות. נא להמתין ולא לסגור את החלון.</p>
     </div>
+    <div class="overlay-card success" id="overlaySuccess" hidden>
+      <div class="success-check">✓</div>
+      <h3>הטופס נשלח בהצלחה!</h3>
+      <p id="overlaySuccessMsg">החוזה נשלח למייל שלך. ניתן לסגור את החלון.</p>
+    </div>
   </div>
 
-  <script src="./app.js?v=11"></script>
+  <script src="./app.js?v=12"></script>
 </body>
 </html>
