@@ -12,6 +12,7 @@ const progressLabel = document.getElementById("progressLabel");
 const progressPct = document.getElementById("progressPct");
 
 const STORAGE_KEY = "amitai-contract-onboarding-draft";
+const BOTH_SHIFTS = "גם בקייטנה וגם בצהרון";
 const STEP_TITLES = [
   "פרטי הצדדים",
   "פרטי הצדדים",
@@ -145,6 +146,23 @@ function validateStep0() {
   return true;
 }
 
+// Step 3 (declarations): the four opening checkboxes are mandatory.
+const REQUIRED_DECLARATIONS = [
+  "contractConfidentiality", "contractSafety", "contractDocuments", "contractTaxConsent"
+];
+function validateStep3() {
+  let ok = true;
+  REQUIRED_DECLARATIONS.forEach((n) => {
+    const el = form.elements[n];
+    const checked = !!(el && el.checked);
+    const label = el ? el.closest(".check") : null;
+    if (label) label.classList.toggle("invalid", !checked);
+    if (!checked) ok = false;
+  });
+  if (!ok) toast("יש לאשר את כל ההצהרות המסומנות בכוכבית כדי להמשיך.");
+  return ok;
+}
+
 /* ---------------- contract HTML (also the PDF) ----------------
    Uses inline styles + tables only (no CSS Grid, no overflow:hidden, no CSS
    variables). This renders identically in html2canvas, which otherwise clips
@@ -153,6 +171,11 @@ function buildContractHtml() {
   const d = getFormData();
   const name = d.contractEmployeeName || "";
   const address = [d.contractEmployeeAddress, d.contractCity].filter(Boolean).join(", ");
+  const both = d.workShift === "גם בקייטנה וגם בצהרון";
+  const roleLabel = both ? [d.contractRole, d.contractRole2].filter(Boolean).join(" / ") : (d.contractRole || "");
+  const wageLabel = both
+    ? [d.hourlyWage, d.hourlyWage2].filter(Boolean).map((w) => w + " ₪").join(" / ")
+    : (d.hourlyWage ? d.hourlyWage + " ₪" : "");
   const NAVY = "#123a6b", TEAL = "#17b0c4", INK = "#111827", MUTED = "#64748b",
     BODY = "#26324a", LINE = "#e5e9f0", DOT = "#cbd5e1", SIGN = "#94a3b8";
 
@@ -162,18 +185,26 @@ function buildContractHtml() {
   const metaRows = [
     ["תאריך חתימה", d.contractDate, "שם העובד/ת", name],
     ["מספר זהות", d.contractEmployeeId, "כתובת", address],
-    ["תפקיד", d.contractRole, "מסגרת / מקום עבודה", d.contractBranch],
-    ["ממונה ישיר/ה", d.directManager, "שכר לשעה", d.hourlyWage ? d.hourlyWage + " ₪" : ""]
+    ["תפקיד", roleLabel, "מסגרת / מקום עבודה", d.contractBranch],
+    ["ממונה ישיר/ה", d.directManager, "שכר לשעה", wageLabel]
   ].map((r) => `<tr>${metaCell(r[0], r[1])}${metaCell(r[2], r[3])}</tr>`).join("");
 
   const clause = (t, b) => `<div style="margin-top:13px">`
     + `<div style="font-size:14px;font-weight:700;color:${NAVY};margin-bottom:3px">${escapeHtml(t)}</div>`
     + `<div style="font-size:12.5px;color:${BODY};line-height:1.6">${b}</div></div>`;
+  const wageClauses = both
+    ? [
+        ["שכר ותשלום — קייטנה", `עבור שעות העבודה כ${valueOrLine(d.contractRole)} — השכר יהיה ${formatMoney(d.hourlyWage)} לשעה, וישולם בכפוף לדיווחי נוכחות, הוראות הדין וניכויי חובה.`],
+        ["שכר ותשלום — צהרון", `עבור שעות העבודה כ${valueOrLine(d.contractRole2)} — השכר יהיה ${formatMoney(d.hourlyWage2)} לשעה, וישולם בכפוף לדיווחי נוכחות, הוראות הדין וניכויי חובה.`]
+      ]
+    : [
+        ["שכר ותשלום", `השכר יהיה ${formatMoney(d.hourlyWage)} לשעה, וישולם בכפוף לדיווחי נוכחות, הוראות הדין וניכויי חובה.`]
+      ];
   const clauses = [
-    ["מהות התפקיד", `העובד/ת יועסק/ת בתפקיד ${valueOrLine(d.contractRole)} במסגרת ${valueOrLine(d.contractBranch)} או בכל מסגרת אחרת שתיקבע על ידי החברה בהתאם לצורכי העבודה.`],
+    ["מהות התפקיד", `העובד/ת יועסק/ת בתפקיד ${valueOrLine(roleLabel)} במסגרת ${valueOrLine(d.contractBranch)} או בכל מסגרת אחרת שתיקבע על ידי החברה בהתאם לצורכי העבודה.`],
     ["תקופת ההעסקה", `תקופת ההסכם תחל ביום ${valueOrLine(d.contractStartDate)} ותסתיים ביום ${valueOrLine(d.contractEndDate)}, אלא אם יוסכם אחרת בכתב או בהתאם לדין.`],
     ["שעות עבודה", `שעות העבודה יהיו ${valueOrLine(d.workHours)}.`],
-    ["שכר ותשלום", `השכר יהיה ${formatMoney(d.hourlyWage)} לשעה, וישולם בכפוף לדיווחי נוכחות, הוראות הדין וניכויי חובה.`],
+    ...wageClauses,
     ["נסיעות, פנסיה והודעה מוקדמת", `דמי נסיעות, הפרשות פנסיוניות והודעה מוקדמת יינתנו על פי דין.`],
     ["נהלים וסודיות", `העובד/ת מתחייב/ת לפעול בהתאם להוראות החברה, לשמור על סודיות, פרטיות ובטיחות, ולהימנע ממסירת מידע על ילדים, הורים, עובדים או פעילות החברה לצד שלישי.`]
   ].map(([t, b]) => clause(t, b)).join("");
@@ -224,6 +255,10 @@ async function submitContract(button) {
     goToStep(0);
     const bad = steps[0].querySelector(".invalid");
     if (bad) bad.focus();
+    return;
+  }
+  if (!validateStep3()) {
+    goToStep(3);
     return;
   }
   const original = button.textContent;
@@ -356,13 +391,39 @@ function setupStep1() {
     CITIES.forEach((c) => { const o = document.createElement("option"); o.value = c; frag.appendChild(o); });
     dl.appendChild(frag);
   }
+  const shiftEl = form.elements.workShift;
   const roleEl = form.elements.contractRole;
+  const role2El = form.elements.contractRole2;
+  const roleField1 = document.getElementById("roleField1");
+  const roleField2 = document.getElementById("roleField2");
+  const roleLabel1 = document.getElementById("roleLabel1");
   const gananet = document.getElementById("roleGananet");
   const sayaat = document.getElementById("roleSayaat");
-  if (!roleEl || !gananet || !sayaat) return;
-  function updateRole() {
-    const showCert = roleEl.value === "גננת" || roleEl.value === "מורה";
-    const isS = roleEl.value === "סייעת";
+  if (!shiftEl || !roleEl || !gananet || !sayaat) return;
+
+  // Roles that are actually in play, given the selected shift(s).
+  function activeRoles() {
+    const shift = shiftEl.value;
+    const roles = [];
+    if (shift) roles.push(roleEl.value);
+    if (shift === BOTH_SHIFTS && role2El) roles.push(role2El.value);
+    return roles.filter(Boolean);
+  }
+
+  function updateShiftRoles() {
+    const shift = shiftEl.value;
+    const both = shift === BOTH_SHIFTS;
+    // Role field 1: hidden until a shift is chosen; label depends on the shift.
+    roleField1.hidden = !shift;
+    if (!shift) roleEl.value = "";
+    if (roleLabel1) roleLabel1.textContent = (shift === "רק בצהרון") ? "תפקיד בצהרון" : "תפקיד בקייטנה";
+    // Role field 2: only for "both".
+    if (roleField2) roleField2.hidden = !both;
+    if (!both && role2El) role2El.value = "";
+    // Certificate / framework questions: shown if ANY active role needs them.
+    const roles = activeRoles();
+    const showCert = roles.some((r) => r === "גננת" || r === "מורה");
+    const isS = roles.some((r) => r === "סייעת");
     gananet.hidden = !showCert;
     sayaat.hidden = !isS;
     if (!showCert && form.elements.roleTeachingCert) {
@@ -370,7 +431,10 @@ function setupStep1() {
     }
     if (!isS && form.elements.roleAssistantType) form.elements.roleAssistantType.value = "";
   }
-  roleEl.addEventListener("change", () => { updateRole(); recomputeDerived(); });
+
+  shiftEl.addEventListener("change", () => { updateShiftRoles(); recomputeDerived(); });
+  roleEl.addEventListener("change", () => { updateShiftRoles(); recomputeDerived(); });
+  if (role2El) role2El.addEventListener("change", () => { updateShiftRoles(); recomputeDerived(); });
   const branchEl = form.elements.contractBranch;
   const frameworkEl = form.elements.roleAssistantType;
   if (branchEl) branchEl.addEventListener("change", recomputeDerived);
@@ -378,33 +442,68 @@ function setupStep1() {
   if (form.elements.roleTeachingCert) {
     Array.from(form.elements.roleTeachingCert).forEach((r) => r.addEventListener("change", recomputeDerived));
   }
-  updateRole();
+  updateShiftRoles();
   recomputeDerived();
+}
+
+// Classify a role into a schedule track (kindergarten vs school).
+function roleTrack(role, framework) {
+  if (role === "מורה") return "school";
+  if (role === "גננת") return "kg";
+  if (role === "סייעת") {
+    if (framework === "בתי ספר") return "school";
+    if (framework === "גני ילדים") return "kg";
+  }
+  return "";
+}
+// Hourly wage for a single role (teaching cert applies to גננת/מורה).
+function roleWage(role, cert) {
+  if (role === "גננת" || role === "מורה") return cert === "כן" ? "75" : (cert === "לא" ? "60" : "");
+  if (role === "סייעת") return "45";
+  return "";
 }
 
 // Step 3 auto-computed values, derived from the earlier selections.
 function recomputeDerived() {
   if (!form || !form.elements.contractRole) return;
+  const shift = form.elements.workShift ? form.elements.workShift.value : "";
+  const both = shift === BOTH_SHIFTS;
   const role = form.elements.contractRole.value;
+  const role2 = form.elements.contractRole2 ? form.elements.contractRole2.value : "";
   const framework = form.elements.roleAssistantType ? form.elements.roleAssistantType.value : "";
   const branch = form.elements.contractBranch ? form.elements.contractBranch.value : "";
   const cert = form.elements.roleTeachingCert ? (form.elements.roleTeachingCert.value || "") : "";
 
-  // Work hours by role.
+  // Work hours. When both shifts, the day is longer; the track is set by the
+  // קייטנה role (falling back to the צהרון role if the first is undetermined).
   let hours = "";
-  if (role === "מורה") hours = "08:00-13:00";
-  else if (role === "גננת" || role === "סייעת") hours = "07:30-13:00";
+  if (both) {
+    const track = roleTrack(role, framework) || roleTrack(role2, framework);
+    if (track === "school") hours = "08:00-16:00";
+    else if (track === "kg") hours = "07:30-16:30";
+  } else {
+    const track = roleTrack(role, framework);
+    if (track === "school") hours = "08:00-13:00";
+    else if (track === "kg") hours = "07:30-13:00";
+  }
   if (form.elements.workHours) form.elements.workHours.value = hours;
 
-  // Hourly wage by role + teaching certificate.
-  let wage = "";
-  if (role === "גננת" || role === "מורה") {
-    if (cert === "כן") wage = "75";
-    else if (cert === "לא") wage = "60";
-  } else if (role === "סייעת") {
-    wage = "45";
+  // Hourly wage(s). A second wage field appears only for the two-shift case.
+  const wageField2 = document.getElementById("wageField2");
+  const sub1 = document.getElementById("wageSub1");
+  const sub2 = document.getElementById("wageSub2");
+  if (form.elements.hourlyWage) form.elements.hourlyWage.value = roleWage(role, cert);
+  if (both) {
+    if (form.elements.hourlyWage2) form.elements.hourlyWage2.value = roleWage(role2, cert);
+    if (wageField2) wageField2.hidden = false;
+    if (sub1) sub1.textContent = role ? `עבור שעות עבודה כ${role}` : "";
+    if (sub2) sub2.textContent = role2 ? `עבור שעות עבודה כ${role2}` : "";
+  } else {
+    if (form.elements.hourlyWage2) form.elements.hourlyWage2.value = "";
+    if (wageField2) wageField2.hidden = true;
+    if (sub1) sub1.textContent = "";
+    if (sub2) sub2.textContent = "";
   }
-  if (form.elements.hourlyWage) form.elements.hourlyWage.value = wage;
 
   // Direct manager by workplace + framework (auto-set only for the defined rules).
   const mgrEl = form.elements.directManager;
@@ -452,8 +551,16 @@ function prefill101() {
 /* ---------------- wiring ---------------- */
 btnNext.addEventListener("click", () => {
   if (currentStep === 0 && !validateStep0()) return;
+  if (currentStep === 3 && !validateStep3()) return;
   saveDraft(true);
   goToStep(currentStep + 1);
+});
+REQUIRED_DECLARATIONS.forEach((n) => {
+  const el = form.elements[n];
+  if (el) el.addEventListener("change", () => {
+    const label = el.closest(".check");
+    if (label && el.checked) label.classList.remove("invalid");
+  });
 });
 btnBack.addEventListener("click", () => goToStep(currentStep - 1));
 document.getElementById("saveDraft").addEventListener("click", () => saveDraft(false));

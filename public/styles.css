@@ -166,6 +166,8 @@ body {
 .check input { margin-top: 3px; width: 18px; height: 18px; accent-color: var(--accent); flex: 0 0 auto; }
 .check span { font-size: .95rem; color: #33425c; }
 .check:has(input:checked) { border-color: var(--accent); background: rgba(23, 176, 196, .07); }
+.check.invalid { border-color: var(--danger); background: rgba(214, 69, 69, .06); }
+.field-sub { display: block; margin-top: 4px; color: var(--muted); font-size: .82rem; }
 
 /* ---------- Buttons / nav ---------- */
 .wizard-nav {

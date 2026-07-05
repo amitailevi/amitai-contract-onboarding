@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>אמיתי לוי יזמות בע"מ | קליטת עובד/ת — חוזה ובנק</title>
-  <link rel="stylesheet" href="./styles.css?v=8">
+  <link rel="stylesheet" href="./styles.css?v=9">
 </head>
 <body>
   <header class="site-header">
@@ -77,8 +77,27 @@
             <input name="contractEmployeeAddress" autocomplete="street-address" placeholder="לדוגמה: הרצל 10">
           </label>
           <label class="field">
-            <span>תפקיד בחוזה</span>
+            <span>עובד/ת בקייטנה ו/או בצהרון?</span>
+            <select name="workShift">
+              <option value="">בחר/י</option>
+              <option>רק בקייטנה</option>
+              <option>רק בצהרון</option>
+              <option>גם בקייטנה וגם בצהרון</option>
+            </select>
+          </label>
+          <label class="field" id="roleField1" hidden>
+            <span id="roleLabel1">תפקיד</span>
             <select name="contractRole">
+              <option value="">בחר/י תפקיד</option>
+              <option>גננת</option>
+              <option>מורה</option>
+              <option>סייעת</option>
+              <option>מדריך/ה</option>
+            </select>
+          </label>
+          <label class="field" id="roleField2" hidden>
+            <span>תפקיד בצהרון</span>
+            <select name="contractRole2">
               <option value="">בחר/י תפקיד</option>
               <option>גננת</option>
               <option>מורה</option>
@@ -138,6 +157,12 @@
           <label class="field">
             <span>שכר לשעה (₪)</span>
             <input name="hourlyWage" readonly placeholder="ייקבע אוטומטית">
+            <small class="field-sub" id="wageSub1"></small>
+          </label>
+          <label class="field" id="wageField2" hidden>
+            <span>שכר לשעה — צהרון (₪)</span>
+            <input name="hourlyWage2" readonly placeholder="ייקבע אוטומטית">
+            <small class="field-sub" id="wageSub2"></small>
           </label>
           <label class="field">
             <span>ממונה ישיר/ה</span>
@@ -159,11 +184,11 @@
           <h2>הצהרות וסעיפים מיוחדים</h2>
           <p>סימון ההצהרות הרלוונטיות וחתימה.</p>
         </div>
-        <div class="checks">
-          <label class="check"><input name="contractConfidentiality" type="checkbox"><span>העובד/ת מתחייב/ת לשמירת סודיות ופרטיות הילדים, ההורים והחברה.</span></label>
-          <label class="check"><input name="contractSafety" type="checkbox"><span>העובד/ת מתחייב/ת לפעול לפי נהלי בטיחות, משמעת והנחיות הממונה.</span></label>
-          <label class="check"><input name="contractDocuments" type="checkbox"><span>העובד/ת מסר/ה מסמכים נדרשים לקליטה: פרטי בנק, תעודת זהות ואישורים לפי הצורך.</span></label>
-          <label class="check"><input name="contractTaxConsent" type="checkbox"><span>העובד/ת מאשר/ת שימוש בפרטים לצורכי שכר, מס ודיווחי חובה.</span></label>
+        <div class="checks" id="requiredChecks">
+          <label class="check"><input name="contractConfidentiality" type="checkbox" required><span><b class="req">*</b> העובד/ת מתחייב/ת לשמירת סודיות ופרטיות הילדים, ההורים והחברה.</span></label>
+          <label class="check"><input name="contractSafety" type="checkbox" required><span><b class="req">*</b> העובד/ת מתחייב/ת לפעול לפי נהלי בטיחות, משמעת והנחיות הממונה.</span></label>
+          <label class="check"><input name="contractDocuments" type="checkbox" required><span><b class="req">*</b> העובד/ת מסר/ה מסמכים נדרשים לקליטה: פרטי בנק, תעודת זהות ואישורים לפי הצורך.</span></label>
+          <label class="check"><input name="contractTaxConsent" type="checkbox" required><span><b class="req">*</b> העובד/ת מאשר/ת שימוש בפרטים לצורכי שכר, מס ודיווחי חובה.</span></label>
         </div>
 
         <div class="contract-terms">
@@ -466,6 +491,6 @@
     </div>
   </div>
 
-  <script src="./app.js?v=10"></script>
+  <script src="./app.js?v=11"></script>
 </body>
 </html>

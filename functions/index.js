@@ -47,6 +47,11 @@ function money(v) {
 function contractInner(d) {
   const name = d.contractEmployeeName || "";
   const address = [d.contractEmployeeAddress, d.contractCity].filter(Boolean).join(", ");
+  const both = d.workShift === "גם בקייטנה וגם בצהרון";
+  const roleLabel = both ? [d.contractRole, d.contractRole2].filter(Boolean).join(" / ") : (d.contractRole || "");
+  const wageLabel = both
+    ? [d.hourlyWage, d.hourlyWage2].filter(Boolean).map((w) => w + " ₪").join(" / ")
+    : (d.hourlyWage ? d.hourlyWage + " ₪" : "");
   const NAVY = "#123a6b", TEAL = "#17b0c4", INK = "#111827", MUTED = "#64748b",
     BODY = "#26324a", LINE = "#e5e9f0", DOT = "#cbd5e1", SIGN = "#94a3b8";
 
@@ -56,18 +61,26 @@ function contractInner(d) {
   const metaRows = [
     ["תאריך חתימה", d.contractDate, "שם העובד/ת", name],
     ["מספר זהות", d.contractEmployeeId, "כתובת", address],
-    ["תפקיד", d.contractRole, "מסגרת / מקום עבודה", d.contractBranch],
-    ["ממונה ישיר/ה", d.directManager, "שכר לשעה", d.hourlyWage ? d.hourlyWage + " ₪" : ""]
+    ["תפקיד", roleLabel, "מסגרת / מקום עבודה", d.contractBranch],
+    ["ממונה ישיר/ה", d.directManager, "שכר לשעה", wageLabel]
   ].map((r) => `<tr>${metaCell(r[0], r[1])}${metaCell(r[2], r[3])}</tr>`).join("");
 
   const clause = (t, b) => `<div style="margin-top:13px">`
     + `<div style="font-size:14px;font-weight:800;color:${NAVY};margin-bottom:3px">${esc(t)}</div>`
     + `<div style="font-size:12.5px;color:${BODY};line-height:1.6">${b}</div></div>`;
+  const wageClauses = both
+    ? [
+        ["שכר ותשלום — קייטנה", `עבור שעות העבודה כ${line(d.contractRole)} — השכר יהיה ${money(d.hourlyWage)} לשעה, וישולם בכפוף לדיווחי נוכחות, הוראות הדין וניכויי חובה.`],
+        ["שכר ותשלום — צהרון", `עבור שעות העבודה כ${line(d.contractRole2)} — השכר יהיה ${money(d.hourlyWage2)} לשעה, וישולם בכפוף לדיווחי נוכחות, הוראות הדין וניכויי חובה.`]
+      ]
+    : [
+        ["שכר ותשלום", `השכר יהיה ${money(d.hourlyWage)} לשעה, וישולם בכפוף לדיווחי נוכחות, הוראות הדין וניכויי חובה.`]
+      ];
   const clauses = [
-    ["מהות התפקיד", `העובד/ת יועסק/ת בתפקיד ${line(d.contractRole)} במסגרת ${line(d.contractBranch)} או בכל מסגרת אחרת שתיקבע על ידי החברה בהתאם לצורכי העבודה.`],
+    ["מהות התפקיד", `העובד/ת יועסק/ת בתפקיד ${line(roleLabel)} במסגרת ${line(d.contractBranch)} או בכל מסגרת אחרת שתיקבע על ידי החברה בהתאם לצורכי העבודה.`],
     ["תקופת ההעסקה", `תקופת ההסכם תחל ביום ${line(d.contractStartDate)} ותסתיים ביום ${line(d.contractEndDate)}, אלא אם יוסכם אחרת בכתב או בהתאם לדין.`],
     ["שעות עבודה", `שעות העבודה יהיו ${line(d.workHours)}.`],
-    ["שכר ותשלום", `השכר יהיה ${money(d.hourlyWage)} לשעה, וישולם בכפוף לדיווחי נוכחות, הוראות הדין וניכויי חובה.`],
+    ...wageClauses,
     ["נסיעות, פנסיה והודעה מוקדמת", `דמי נסיעות, הפרשות פנסיוניות והודעה מוקדמת יינתנו על פי דין.`],
     ["נהלים וסודיות", `העובד/ת מתחייב/ת לפעול בהתאם להוראות החברה, לשמור על סודיות, פרטיות ובטיחות, ולהימנע ממסירת מידע על ילדים, הורים, עובדים או פעילות החברה לצד שלישי.`]
   ].map(([t, b]) => clause(t, b)).join("");
@@ -297,6 +310,7 @@ const AT = {
   name: "fldvt69i9yDLayDQC", email: "fldX908ZZ7N2EYLQ9", id: "fldkFXmavibrxnArg",
   status: "fldFY7bJRzAcUutWm", pdf: "fldhxAO4H5DMqBPBt", documents: "fldni0BTosxisPWoI", form101: "fldeSvJYwzP5CQv5c",
   contractDate: "fld91Zt8bsHHOZlAg", address: "fldF8V8L0C2jaiDDJ", city: "fldbQHUPhP6x9yEBQ",
+  workShift: "fldMcyPpIokdOFZGg", role2: "fld5xNCiGAtyCl85F", wage2: "fldYzjgQaLHK6m45e",
   role: "fldtiJs3i9DEYgR9P", teachingCert: "fld58JA2JAdtyM7F8", assistantType: "fldiIM1fu6YMaCjMe",
   branch: "fld6vyCxsV2g65oYk", start: "fldX09TsRHb68LcNZ", end: "fldmunRb2vORi3tJT",
   workDays: "fldmeT1aSryvOjKQX", workHours: "fldAHvJZvAisOK2vZ", scope: "fld2b1YAzylL51Asa",
@@ -330,7 +344,9 @@ async function pushToAirtable(d, submissionId, pdfBuffer, pdfFilename, documents
   put(AT.contractDate, d.contractDate);
   put(AT.address, d.contractEmployeeAddress);
   put(AT.city, d.contractCity);
+  put(AT.workShift, d.workShift);
   put(AT.role, d.contractRole);
+  put(AT.role2, d.contractRole2);
   put(AT.teachingCert, d.roleTeachingCert);
   put(AT.assistantType, d.roleAssistantType);
   put(AT.branch, d.contractBranch);
@@ -341,6 +357,8 @@ async function pushToAirtable(d, submissionId, pdfBuffer, pdfFilename, documents
   put(AT.scope, d.positionScope);
   const wageNum = d.hourlyWage ? Number(String(d.hourlyWage).replace(/[^\d.]/g, "")) : NaN;
   if (!isNaN(wageNum)) fields[AT.wage] = wageNum;
+  const wageNum2 = d.hourlyWage2 ? Number(String(d.hourlyWage2).replace(/[^\d.]/g, "")) : NaN;
+  if (!isNaN(wageNum2)) fields[AT.wage2] = wageNum2;
   put(AT.payFreq, d.payFrequency);
   put(AT.travel, d.travelTerms);
   put(AT.pension, d.pensionTerms);
