@@ -18,6 +18,7 @@ const STEP_TITLES = [
   "תנאי ההעסקה",
   "הצהרות וסעיפים מיוחדים",
   "פרטי בנק",
+  "טופס 101",
   "סיכום והגשה"
 ];
 const REQUIRED_STEP0 = [
@@ -108,6 +109,7 @@ function goToStep(n) {
   btnNext.hidden = onLast;
   finalActions.hidden = !onLast;
   recomputeDerived();
+  if (currentStep === 5) prefill101();
   if (onLast) renderContractPreview();
   updateProgress();
   window.scrollTo({ top: 0, behavior: "smooth" });
@@ -415,6 +417,38 @@ function recomputeDerived() {
   }
 }
 
+/* ---------------- step 101 helpers ---------------- */
+function setupStep101() {
+  const marital = form.elements.maritalStatus;
+  const spouse = document.getElementById("spouseFields");
+  if (!marital || !spouse) return;
+  function update() {
+    const married = marital.value === "נשוי/אה";
+    spouse.hidden = !married;
+    if (!married) {
+      ["spouseName", "spouseId", "spouseBirthDate"].forEach((n) => {
+        if (form.elements[n]) form.elements[n].value = "";
+      });
+    }
+  }
+  marital.addEventListener("change", update);
+  update();
+}
+function prefill101() {
+  const first = form.elements.firstName;
+  const last = form.elements.lastName;
+  const full = form.elements.contractEmployeeName ? form.elements.contractEmployeeName.value.trim() : "";
+  if (full && first && last && !first.value && !last.value) {
+    const parts = full.split(/\s+/);
+    if (parts.length > 1) {
+      last.value = parts[parts.length - 1];
+      first.value = parts.slice(0, -1).join(" ");
+    } else {
+      first.value = full;
+    }
+  }
+}
+
 /* ---------------- wiring ---------------- */
 btnNext.addEventListener("click", () => {
   if (currentStep === 0 && !validateStep0()) return;
@@ -437,4 +471,5 @@ try {
 setupUpload();
 setupStep0();
 setupStep1();
+setupStep101();
 goToStep(0);

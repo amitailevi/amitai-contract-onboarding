@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>אמיתי לוי יזמות בע"מ | קליטת עובד/ת — חוזה ובנק</title>
-  <link rel="stylesheet" href="./styles.css?v=7">
+  <link rel="stylesheet" href="./styles.css?v=8">
 </head>
 <body>
   <header class="site-header">
@@ -337,8 +337,102 @@
         </div>
       </section>
 
-      <!-- Step 5: Summary -->
+      <!-- Step 5: Form 101 -->
       <section class="step-card" data-step="5" hidden>
+        <div class="step-head">
+          <h2>טופס 101 — כרטיס עובד</h2>
+          <p>פרטים לצורך תיאום מס ונקודות זיכוי. חלק מהפרטים מולאו אוטומטית לפי מה שהזנת.</p>
+        </div>
+
+        <h3 class="subhead">פרטים אישיים</h3>
+        <div class="grid">
+          <label class="field"><span>שם פרטי</span><input name="firstName"></label>
+          <label class="field"><span>שם משפחה</span><input name="lastName"></label>
+          <label class="field"><span>תאריך לידה</span><input name="birthDate" type="date"></label>
+          <label class="field"><span>תאריך עלייה (אם רלוונטי)</span><input name="immigrationDate" type="date"></label>
+          <label class="field"><span>טלפון</span><input name="phone" type="tel" inputmode="tel"></label>
+          <label class="field"><span>טלפון נייד</span><input name="mobile" type="tel" inputmode="tel"></label>
+          <label class="field"><span>מיקוד</span><input name="zip" inputmode="numeric"></label>
+          <label class="field"><span>מין</span>
+            <select name="gender"><option value="">בחר/י</option><option>זכר</option><option>נקבה</option></select>
+          </label>
+          <label class="field"><span>מצב משפחתי</span>
+            <select name="maritalStatus"><option value="">בחר/י</option><option>רווק/ה</option><option>נשוי/אה</option><option>גרוש/ה</option><option>אלמן/ה</option><option>פרוד/ה</option></select>
+          </label>
+          <label class="field"><span>תושב/ת ישראל</span>
+            <select name="isIsraeliResident"><option value="">בחר/י</option><option>כן</option><option>לא</option></select>
+          </label>
+          <label class="field"><span>חבר/ת קופת חולים</span>
+            <select name="healthFundMember"><option value="">בחר/י</option><option>כן</option><option>לא</option></select>
+          </label>
+          <label class="field"><span>חבר/ת קיבוץ</span>
+            <select name="kibbutzMember"><option value="">בחר/י</option><option>כן</option><option>לא</option></select>
+          </label>
+        </div>
+
+        <h3 class="subhead">הכנסות</h3>
+        <div class="grid">
+          <label class="field"><span>סוג ההכנסה מהמעסיק</span>
+            <select name="incomeType">
+              <option value="">בחר/י</option>
+              <option>משכורת חודש</option>
+              <option>משכורת בעד משרה נוספת</option>
+              <option>משכורת חלקית</option>
+              <option>שכר עבודה (עובד יומי)</option>
+              <option>קצבה</option>
+              <option>מלגה</option>
+            </select>
+          </label>
+          <label class="field"><span>הכנסות נוספות</span>
+            <select name="otherIncome"><option value="">בחר/י</option><option>אין לי הכנסות אחרות</option><option>יש לי הכנסות נוספות</option></select>
+          </label>
+        </div>
+
+        <div id="spouseFields" hidden>
+          <h3 class="subhead">בן/בת זוג</h3>
+          <div class="grid">
+            <label class="field"><span>שם בן/בת הזוג</span><input name="spouseName"></label>
+            <label class="field"><span>ת"ז בן/בת הזוג</span><input name="spouseId" inputmode="numeric"></label>
+            <label class="field"><span>תאריך לידה בן/בת הזוג</span><input name="spouseBirthDate" type="date"></label>
+          </div>
+        </div>
+
+        <h3 class="subhead">ילדים (עד 3)</h3>
+        <div class="grid">
+          <label class="field"><span>שם ילד/ה 1</span><input name="child1Name"></label>
+          <label class="field"><span>ת"ז ילד/ה 1</span><input name="child1Id" inputmode="numeric"></label>
+          <label class="field"><span>תאריך לידה ילד/ה 1</span><input name="child1BirthDate" type="date"></label>
+          <label class="field"><span>שם ילד/ה 2</span><input name="child2Name"></label>
+          <label class="field"><span>ת"ז ילד/ה 2</span><input name="child2Id" inputmode="numeric"></label>
+          <label class="field"><span>תאריך לידה ילד/ה 2</span><input name="child2BirthDate" type="date"></label>
+          <label class="field"><span>שם ילד/ה 3</span><input name="child3Name"></label>
+          <label class="field"><span>ת"ז ילד/ה 3</span><input name="child3Id" inputmode="numeric"></label>
+          <label class="field"><span>תאריך לידה ילד/ה 3</span><input name="child3BirthDate" type="date"></label>
+        </div>
+
+        <h3 class="subhead">נקודות זיכוי — בקשה לפטור / זיכוי ממס</h3>
+        <div class="checks">
+          <label class="check"><input name="creditResident" type="checkbox"><span>אני תושב/ת ישראל</span></label>
+          <label class="check"><input name="creditDisabled" type="checkbox"><span>אני נכה 100% / עיוור/ת לצמיתות</span></label>
+          <label class="check"><input name="creditLocality" type="checkbox"><span>אני תושב/ת קבוע/ה ביישוב מזכה</span></label>
+          <label class="check"><input name="creditImmigrant" type="checkbox"><span>אני עולה חדש/ה</span></label>
+          <label class="check"><input name="creditSpouseNoIncome" type="checkbox"><span>בגין בן/בת זוג ללא הכנסות בשנת המס</span></label>
+          <label class="check"><input name="creditSeparatedParent" type="checkbox"><span>אני הורה במשפחה חד הורית החי בנפרד</span></label>
+          <label class="check"><input name="creditChildrenCustody" type="checkbox"><span>בגין ילדי שבחזקתי</span></label>
+          <label class="check"><input name="creditToddlers" type="checkbox"><span>בגין ילדי (פעוטות)</span></label>
+          <label class="check"><input name="creditSingleParent" type="checkbox"><span>אני הורה יחיד לילדי שבחזקתי</span></label>
+          <label class="check"><input name="creditChildSupport" type="checkbox"><span>בגין ילדי שאינם בחזקתי ואני משתתף/ת בכלכלתם</span></label>
+          <label class="check"><input name="creditDisabledChild" type="checkbox"><span>ילד עם מוגבלות עד גיל 19</span></label>
+          <label class="check"><input name="creditAlimony" type="checkbox"><span>בגין מזונות לבן/בת זוג לשעבר</span></label>
+          <label class="check"><input name="creditYoungEmployee" type="checkbox"><span>מלאו לי או לבן/בת זוגי 16 וטרם מלאו 18</span></label>
+          <label class="check"><input name="creditDischarged" type="checkbox"><span>חייל/ת משוחרר/ת / שירות לאומי</span></label>
+          <label class="check"><input name="creditStudies" type="checkbox"><span>סיום לימודים / התמחות / לימודי מקצוע</span></label>
+          <label class="check"><input name="creditReserve" type="checkbox"><span>שירות מילואים כלוחם/לוחמת בשנת המס הקודמת</span></label>
+        </div>
+      </section>
+
+      <!-- Step 6: Summary -->
+      <section class="step-card" data-step="6" hidden>
         <div class="step-head">
           <h2>סיכום והגשה</h2>
           <p>בדקו את תצוגת החוזה, ואז הגישו — עותק PDF יישלח למייל.</p>
@@ -372,6 +466,6 @@
     </div>
   </div>
 
-  <script src="./app.js?v=9"></script>
+  <script src="./app.js?v=10"></script>
 </body>
 </html>

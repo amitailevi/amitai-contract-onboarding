@@ -13,6 +13,8 @@ admin.initializeApp();
 // Hebrew font embedded as a data URI so headless Chromium (which ships without
 // Hebrew fonts) always renders Hebrew correctly, independent of system fonts.
 const FONT_B64 = fs.readFileSync(path.join(__dirname, "fonts", "NotoSansHebrew.ttf")).toString("base64");
+const TOFES1_B64 = fs.readFileSync(path.join(__dirname, "assets", "tofes-101-page-1.webp")).toString("base64");
+const TOFES2_B64 = fs.readFileSync(path.join(__dirname, "assets", "tofes-101-page-2.webp")).toString("base64");
 
 const app = express();
 app.use(cors({ origin: true }));
@@ -134,6 +136,111 @@ async function renderContractPdf(formData) {
   }
 }
 
+/* ---------------- Form 101 (data overlaid on the official form images) ---------------- */
+function of(value, left, top, width) {
+  const s = String(value == null ? "" : value).trim();
+  if (!s) return "";
+  return `<span class="of" style="left:${left}%;top:${top}%;width:${width}%">${esc(s)}</span>`;
+}
+function oc(checked, left, top) {
+  return checked ? `<span class="oc" style="left:${left}%;top:${top}%">✓</span>` : "";
+}
+function form101Doc(f) {
+  const firstName = f.firstName || "";
+  const lastName = f.lastName || "";
+  const fullName = [firstName, lastName].filter(Boolean).join(" ") || (f.contractEmployeeName || "");
+  const idNumber = f.contractEmployeeId || "";
+  const city = f.contractCity || "";
+  const street = f.contractEmployeeAddress || "";
+  const combinedAddr = [street, city].filter(Boolean).join(" ");
+  const startDate = f.contractStartDate || "";
+  const formDate = f.contractDate || "";
+  const children = [1, 2, 3]
+    .map((i) => ({ name: f["child" + i + "Name"], id: f["child" + i + "Id"], birthDate: f["child" + i + "BirthDate"] }))
+    .filter((c) => c.name || c.id || c.birthDate);
+  const spouseName = f.spouseName || "";
+  const spouseFirst = spouseName.split(" ").slice(0, -1).join(" ");
+  const spouseLast = spouseName.split(" ").slice(-1).join(" ");
+
+  const creditMap = [
+    ["creditResident", 4.4], ["creditDisabled", 7.0], ["creditLocality", 12.0], ["creditImmigrant", 14.4],
+    ["creditSpouseNoIncome", 19.0], ["creditSeparatedParent", 22.5], ["creditChildrenCustody", 25.4], ["creditToddlers", 30.8],
+    ["creditSingleParent", 37.4], ["creditChildSupport", 39.6], ["creditDisabledChild", 42.4], ["creditAlimony", 45.6],
+    ["creditYoungEmployee", 48.1], ["creditDischarged", 50.6], ["creditStudies", 53.1], ["creditReserve", 55.1]
+  ];
+  const page2Checks = creditMap.map(([k, top]) => oc(Boolean(f[k]), 86.4, top)).join("");
+
+  const page1 = `<div class="page101"><img src="data:image/webp;base64,${TOFES1_B64}">`
+    + of("2026", 45.3, 11.6, 9)
+    + of('אמיתי לוי יזמות בע"מ', 74.5, 21.0, 18.5)
+    + of(f.phone, 25.4, 21.0, 13)
+    + of(idNumber, 77.8, 27.2, 18.7)
+    + of(lastName, 64.2, 27.2, 13.2)
+    + of(firstName, 50.5, 27.2, 13.2)
+    + of(f.birthDate, 35.6, 27.2, 13)
+    + of(f.immigrationDate, 20.0, 27.2, 13.5)
+    + of(combinedAddr, 31.0, 31.2, 37)
+    + of(city, 25.0, 34.6, 10)
+    + of(street, 42.0, 34.6, 17)
+    + of(f.zip, 5.6, 34.6, 10)
+    + of(f.email, 44.5, 40.4, 26)
+    + of(f.phone, 28.0, 40.4, 15)
+    + of(f.mobile, 8.0, 40.4, 17)
+    + oc(f.gender === "זכר", 92.3, 36.9) + oc(f.gender === "נקבה", 92.3, 39.6)
+    + oc(f.maritalStatus === "רווק/ה", 81.0, 36.9) + oc(f.maritalStatus === "נשוי/אה", 74.2, 36.9)
+    + oc(f.maritalStatus === "גרוש/ה", 67.0, 36.9) + oc(f.maritalStatus === "אלמן/ה", 80.9, 39.6)
+    + oc(f.maritalStatus === "פרוד/ה", 70.7, 39.6)
+    + oc(f.isIsraeliResident === "כן", 55.5, 36.9) + oc(f.isIsraeliResident === "לא", 55.5, 39.6)
+    + oc(f.kibbutzMember === "כן", 43.0, 36.9) + oc(f.kibbutzMember === "לא", 43.0, 39.6)
+    + oc(f.healthFundMember === "כן", 29.0, 36.9) + oc(f.healthFundMember === "לא", 29.0, 39.6)
+    + of(children[0] && children[0].name, 72.0, 48.6, 13) + of(children[0] && children[0].id, 54.0, 48.6, 16) + of(children[0] && children[0].birthDate, 39.0, 48.6, 13)
+    + of(children[1] && children[1].name, 72.0, 53.5, 13) + of(children[1] && children[1].id, 54.0, 53.5, 16) + of(children[1] && children[1].birthDate, 39.0, 53.5, 13)
+    + of(children[2] && children[2].name, 72.0, 58.4, 13) + of(children[2] && children[2].id, 54.0, 58.4, 16) + of(children[2] && children[2].birthDate, 39.0, 58.4, 13)
+    + of(startDate, 8.0, 49.5, 20)
+    + oc(f.incomeType === "משכורת חודש", 43.7, 50.5) + oc(f.incomeType === "משכורת בעד משרה נוספת", 43.7, 52.8)
+    + oc(f.incomeType === "משכורת חלקית", 43.7, 55.0) + oc(f.incomeType === "שכר עבודה (עובד יומי)", 43.7, 57.3)
+    + oc(f.incomeType === "קצבה", 43.7, 59.6) + oc(f.incomeType === "מלגה", 43.7, 61.8)
+    + oc(f.otherIncome === "אין לי הכנסות אחרות", 45.0, 65.6) + oc(f.otherIncome === "יש לי הכנסות נוספות", 45.0, 69.4)
+    + of(f.spouseId, 78.0, 83.8, 18) + of(spouseLast, 62.5, 83.8, 14) + of(spouseFirst, 47.5, 83.8, 14) + of(f.spouseBirthDate, 31.6, 83.8, 13)
+    + of(fullName, 9.0, 96.2, 20)
+    + `</div>`;
+
+  const page2 = `<div class="page101"><img src="data:image/webp;base64,${TOFES2_B64}">`
+    + page2Checks
+    + of(fullName, 4.0, 77.4, 18)
+    + of(formDate, 35.0, 77.4, 14)
+    + `</div>`;
+
+  return `<!doctype html><html lang="he" dir="rtl"><head><meta charset="utf-8"><style>`
+    + `@font-face{font-family:'HebFont';src:url(data:font/ttf;base64,${FONT_B64}) format('truetype');font-weight:100 900}`
+    + `@page{size:A4;margin:0}`
+    + `*{box-sizing:border-box}html,body{margin:0;padding:0}`
+    + `body{font-family:'HebFont',Arial,sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact}`
+    + `.page101{position:relative;width:210mm;height:297mm;overflow:hidden}`
+    + `.page101+.page101{page-break-before:always}`
+    + `.page101 img{position:absolute;top:0;left:0;width:100%;height:100%;display:block}`
+    + `.of{position:absolute;direction:rtl;text-align:center;color:#111;font-weight:700;font-size:9pt;line-height:1}`
+    + `.oc{position:absolute;color:#111;font-weight:900;font-size:13pt;line-height:1}`
+    + `</style></head><body>${page1}${page2}</body></html>`;
+}
+
+async function render101Pdf(formData) {
+  const html = form101Doc(formData || {});
+  const browser = await puppeteer.launch({
+    args: chromium.args,
+    defaultViewport: { width: 900, height: 1273 },
+    executablePath: await chromium.executablePath(),
+    headless: chromium.headless
+  });
+  try {
+    const page = await browser.newPage();
+    await page.setContent(html, { waitUntil: "networkidle0" });
+    return await page.pdf({ format: "a4", printBackground: true, margin: { top: "0", right: "0", bottom: "0", left: "0" } });
+  } finally {
+    await browser.close();
+  }
+}
+
 /* ---------------- email ---------------- */
 function createTransport() {
   const host = process.env.SMTP_HOST;
@@ -188,7 +295,7 @@ const AIRTABLE_BASE = "app8yycUBnh8Hrlqo";
 const AIRTABLE_TABLE = "tblC2en9pCuXgqpFM";
 const AT = {
   name: "fldvt69i9yDLayDQC", email: "fldX908ZZ7N2EYLQ9", id: "fldkFXmavibrxnArg",
-  status: "fldFY7bJRzAcUutWm", pdf: "fldhxAO4H5DMqBPBt", documents: "fldni0BTosxisPWoI",
+  status: "fldFY7bJRzAcUutWm", pdf: "fldhxAO4H5DMqBPBt", documents: "fldni0BTosxisPWoI", form101: "fldeSvJYwzP5CQv5c",
   contractDate: "fld91Zt8bsHHOZlAg", address: "fldF8V8L0C2jaiDDJ", city: "fldbQHUPhP6x9yEBQ",
   role: "fldtiJs3i9DEYgR9P", teachingCert: "fld58JA2JAdtyM7F8", assistantType: "fldiIM1fu6YMaCjMe",
   branch: "fld6vyCxsV2g65oYk", start: "fldX09TsRHb68LcNZ", end: "fldmunRb2vORi3tJT",
@@ -203,7 +310,7 @@ const AT = {
 
 // Create the Airtable row and attach the contract PDF. Never throws — a back-office
 // failure must not break the submission/email.
-async function pushToAirtable(d, submissionId, pdfBuffer, pdfFilename, documents) {
+async function pushToAirtable(d, submissionId, pdfBuffer, pdfFilename, documents, form101Buffer, form101Filename) {
   const token = process.env.AIRTABLE_TOKEN;
   if (!token) { console.log("AIRTABLE_TOKEN not set — skipping Airtable push"); return; }
 
@@ -276,6 +383,9 @@ async function pushToAirtable(d, submissionId, pdfBuffer, pdfFilename, documents
   if (pdfBuffer) {
     await upload(AT.pdf, "application/pdf", pdfFilename || "Contract.pdf", pdfBuffer.toString("base64"));
   }
+  if (form101Buffer) {
+    await upload(AT.form101, "application/pdf", form101Filename || "Form-101.pdf", form101Buffer.toString("base64"));
+  }
   for (const doc of (Array.isArray(documents) ? documents : [])) {
     if (doc && doc.contentBase64 && doc.filename) {
       await upload(AT.documents, doc.contentType || "application/octet-stream", doc.filename, doc.contentBase64);
@@ -314,15 +424,22 @@ app.post("/api/contract-submissions", async (req, res) => {
     // Generate the contract PDF server-side (real Chromium) — used for both the
     // email attachment and the Airtable back-office record.
     const pdfFilename = `Contract-${idNum || "employee"}.pdf`;
+    const form101Filename = `Form-101-${idNum || "employee"}.pdf`;
     let pdfBuffer = null;
+    let form101Buffer = null;
     try {
       pdfBuffer = await renderContractPdf(formData);
     } catch (e) {
       console.error("Contract PDF render failed:", e);
     }
-    const mailAttachments = pdfBuffer
-      ? [{ filename: pdfFilename, content: pdfBuffer, contentType: "application/pdf" }]
-      : [];
+    try {
+      form101Buffer = await render101Pdf(formData);
+    } catch (e) {
+      console.error("Form 101 render failed:", e);
+    }
+    const mailAttachments = [];
+    if (pdfBuffer) mailAttachments.push({ filename: pdfFilename, content: pdfBuffer, contentType: "application/pdf" });
+    if (form101Buffer) mailAttachments.push({ filename: form101Filename, content: form101Buffer, contentType: "application/pdf" });
 
     const mailResult = await sendContractCopy({
       email: formData.email,
@@ -336,7 +453,8 @@ app.post("/api/contract-submissions", async (req, res) => {
     try {
       airtableRecordId = await pushToAirtable(
         formData, submissionRef.id, pdfBuffer, pdfFilename,
-        Array.isArray(body.documents) ? body.documents : []
+        Array.isArray(body.documents) ? body.documents : [],
+        form101Buffer, form101Filename
       );
     } catch (e) {
       console.error("Airtable push failed:", e);
