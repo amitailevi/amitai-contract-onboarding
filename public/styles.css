@@ -330,6 +330,42 @@ body {
 }
 .clause-body p { margin: 10px 0 0; }
 
+/* ---------- Submit overlay ---------- */
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(18, 41, 77, .55);
+  backdrop-filter: blur(4px);
+  animation: overlayFade .2s ease;
+}
+@keyframes overlayFade { from { opacity: 0; } to { opacity: 1; } }
+.overlay-card {
+  background: #fff;
+  border-radius: 18px;
+  padding: 34px 30px;
+  max-width: 360px;
+  text-align: center;
+  box-shadow: var(--shadow);
+  animation: rise .3s ease;
+}
+.overlay-card h3 { margin: 18px 0 8px; color: var(--primary); font-size: 1.2rem; }
+.overlay-card p { margin: 0; color: var(--muted); font-size: .95rem; line-height: 1.55; }
+.spinner {
+  width: 58px;
+  height: 58px;
+  margin: 0 auto;
+  border: 5px solid rgba(23, 176, 196, .2);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
 /* ---------- Responsive ---------- */
 @media (max-width: 640px) {
   .grid { grid-template-columns: 1fr; }

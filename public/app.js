@@ -227,6 +227,8 @@ async function submitContract(button) {
   const original = button.textContent;
   button.disabled = true;
   button.textContent = "מכין חוזה ושולח...";
+  const overlay = document.getElementById("submitOverlay");
+  if (overlay) overlay.hidden = false;
   try {
     let documents = [];
     if (bankApprovalFile) {
@@ -255,6 +257,7 @@ async function submitContract(button) {
   } finally {
     button.disabled = false;
     button.textContent = original;
+    if (overlay) overlay.hidden = true;
   }
 }
 
