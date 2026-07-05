@@ -176,52 +176,48 @@ function form101Doc(f) {
   const spouseLast = spouseName.split(" ").slice(-1).join(" ");
 
   const creditMap = [
-    ["creditResident", 4.4], ["creditDisabled", 7.0], ["creditLocality", 12.0], ["creditImmigrant", 14.4],
-    ["creditSpouseNoIncome", 19.0], ["creditSeparatedParent", 22.5], ["creditChildrenCustody", 25.4], ["creditToddlers", 30.8],
-    ["creditSingleParent", 37.4], ["creditChildSupport", 39.6], ["creditDisabledChild", 42.4], ["creditAlimony", 45.6],
-    ["creditYoungEmployee", 48.1], ["creditDischarged", 50.6], ["creditStudies", 53.1], ["creditReserve", 55.1]
+    ["creditResident", 5.5], ["creditDisabled", 8.0], ["creditLocality", 11.6], ["creditImmigrant", 14.6],
+    ["creditSpouseNoIncome", 19.0], ["creditSeparatedParent", 22.4], ["creditChildrenCustody", 25.8], ["creditToddlers", 32.5],
+    ["creditSingleParent", 38.5], ["creditChildSupport", 40.9], ["creditDisabledChild", 44.0], ["creditAlimony", 47.6],
+    ["creditYoungEmployee", 49.7], ["creditDischarged", 52.0], ["creditStudies", 54.6], ["creditReserve", 56.5]
   ];
-  const page2Checks = creditMap.map(([k, top]) => oc(Boolean(f[k]), 86.4, top)).join("");
+  const page2Checks = creditMap.map(([k, top]) => oc(Boolean(f[k]), 87.0, top)).join("");
 
   const page1 = `<div class="page101"><img src="data:image/webp;base64,${TOFES1_B64}">`
-    + of("2026", 45.3, 11.6, 9)
-    + of('אמיתי לוי יזמות בע"מ', 74.5, 21.0, 18.5)
-    + of(f.phone, 25.4, 21.0, 13)
-    + of(idNumber, 77.8, 27.2, 18.7)
-    + of(lastName, 64.2, 27.2, 13.2)
-    + of(firstName, 50.5, 27.2, 13.2)
-    + of(f.birthDate, 35.6, 27.2, 13)
-    + of(f.immigrationDate, 20.0, 27.2, 13.5)
-    + of(combinedAddr, 31.0, 31.2, 37)
-    + of(city, 25.0, 34.6, 10)
-    + of(street, 42.0, 34.6, 17)
-    + of(f.zip, 5.6, 34.6, 10)
-    + of(f.email, 44.5, 40.4, 26)
-    + of(f.phone, 28.0, 40.4, 15)
-    + of(f.mobile, 8.0, 40.4, 17)
-    + oc(f.gender === "זכר", 92.3, 36.9) + oc(f.gender === "נקבה", 92.3, 39.6)
-    + oc(f.maritalStatus === "רווק/ה", 81.0, 36.9) + oc(f.maritalStatus === "נשוי/אה", 74.2, 36.9)
-    + oc(f.maritalStatus === "גרוש/ה", 67.0, 36.9) + oc(f.maritalStatus === "אלמן/ה", 80.9, 39.6)
-    + oc(f.maritalStatus === "פרוד/ה", 70.7, 39.6)
-    + oc(f.isIsraeliResident === "כן", 55.5, 36.9) + oc(f.isIsraeliResident === "לא", 55.5, 39.6)
-    + oc(f.kibbutzMember === "כן", 43.0, 36.9) + oc(f.kibbutzMember === "לא", 43.0, 39.6)
-    + oc(f.healthFundMember === "כן", 29.0, 36.9) + oc(f.healthFundMember === "לא", 29.0, 39.6)
-    + of(children[0] && children[0].name, 72.0, 48.6, 13) + of(children[0] && children[0].id, 54.0, 48.6, 16) + of(children[0] && children[0].birthDate, 39.0, 48.6, 13)
-    + of(children[1] && children[1].name, 72.0, 53.5, 13) + of(children[1] && children[1].id, 54.0, 53.5, 16) + of(children[1] && children[1].birthDate, 39.0, 53.5, 13)
-    + of(children[2] && children[2].name, 72.0, 58.4, 13) + of(children[2] && children[2].id, 54.0, 58.4, 16) + of(children[2] && children[2].birthDate, 39.0, 58.4, 13)
-    + of(startDate, 8.0, 49.5, 20)
-    + oc(f.incomeType === "משכורת חודש", 43.7, 50.5) + oc(f.incomeType === "משכורת בעד משרה נוספת", 43.7, 52.8)
-    + oc(f.incomeType === "משכורת חלקית", 43.7, 55.0) + oc(f.incomeType === "שכר עבודה (עובד יומי)", 43.7, 57.3)
-    + oc(f.incomeType === "קצבה", 43.7, 59.6) + oc(f.incomeType === "מלגה", 43.7, 61.8)
-    + oc(f.otherIncome === "אין לי הכנסות אחרות", 45.0, 65.6) + oc(f.otherIncome === "יש לי הכנסות נוספות", 45.0, 69.4)
-    + of(f.spouseId, 78.0, 83.8, 18) + of(spouseLast, 62.5, 83.8, 14) + of(spouseFirst, 47.5, 83.8, 14) + of(f.spouseBirthDate, 31.6, 83.8, 13)
-    + of(fullName, 9.0, 96.2, 20)
+    + of("2026", 35.0, 10.5, 12)
+    + of('אמיתי לוי יזמות בע"מ', 71.0, 20.0, 25)
+    + of(idNumber, 74.0, 26.0, 20)
+    + of(lastName, 57.5, 26.0, 14)
+    + of(firstName, 44.5, 26.0, 12)
+    + of(f.birthDate, 26.0, 26.0, 16)
+    + of(f.immigrationDate, 6.0, 26.0, 16)
+    + of(combinedAddr, 8.0, 30.2, 58)
+    + of(f.email, 58.0, 37.6, 38)
+    + of(f.phone, 30.0, 37.6, 26)
+    + of(f.mobile, 2.0, 37.6, 26)
+    + oc(f.gender === "זכר", 93.0, 33.6) + oc(f.gender === "נקבה", 93.0, 35.0)
+    + oc(f.maritalStatus === "רווק/ה", 83.0, 33.6) + oc(f.maritalStatus === "נשוי/אה", 76.0, 33.6)
+    + oc(f.maritalStatus === "גרוש/ה", 69.0, 33.6) + oc(f.maritalStatus === "אלמן/ה", 83.0, 35.0)
+    + oc(f.maritalStatus === "פרוד/ה", 76.0, 35.0)
+    + oc(f.isIsraeliResident === "כן", 56.0, 33.6) + oc(f.isIsraeliResident === "לא", 56.0, 35.0)
+    + oc(f.kibbutzMember === "כן", 43.0, 33.6) + oc(f.kibbutzMember === "לא", 43.0, 35.0)
+    + oc(f.healthFundMember === "לא", 29.0, 33.6) + oc(f.healthFundMember === "כן", 29.0, 35.0)
+    + of(children[0] && children[0].name, 76.0, 45.8, 14) + of(children[0] && children[0].id, 54.0, 45.8, 16) + of(children[0] && children[0].birthDate, 38.0, 45.8, 14)
+    + of(children[1] && children[1].name, 76.0, 48.1, 14) + of(children[1] && children[1].id, 54.0, 48.1, 16) + of(children[1] && children[1].birthDate, 38.0, 48.1, 14)
+    + of(children[2] && children[2].name, 76.0, 50.4, 14) + of(children[2] && children[2].id, 54.0, 50.4, 16) + of(children[2] && children[2].birthDate, 38.0, 50.4, 14)
+    + of(startDate, 4.0, 46.5, 22)
+    + oc(f.incomeType === "משכורת חודש", 51.0, 42.7) + oc(f.incomeType === "משכורת בעד משרה נוספת", 51.0, 44.4)
+    + oc(f.incomeType === "משכורת חלקית", 51.0, 46.0) + oc(f.incomeType === "שכר עבודה (עובד יומי)", 51.0, 47.6)
+    + oc(f.incomeType === "קצבה", 51.0, 49.2) + oc(f.incomeType === "מלגה", 51.0, 50.8)
+    + oc(f.otherIncome === "אין לי הכנסות אחרות", 51.0, 53.0) + oc(f.otherIncome === "יש לי הכנסות נוספות", 51.0, 57.0)
+    + of(f.spouseId, 74.0, 83.5, 20) + of(spouseLast, 57.5, 83.5, 14) + of(spouseFirst, 44.5, 83.5, 12) + of(f.spouseBirthDate, 26.0, 83.5, 16)
+    + of(fullName, 4.0, 92.0, 18)
     + `</div>`;
 
   const page2 = `<div class="page101"><img src="data:image/webp;base64,${TOFES2_B64}">`
     + page2Checks
-    + of(fullName, 4.0, 77.4, 18)
-    + of(formDate, 35.0, 77.4, 14)
+    + of(fullName, 2.0, 79.0, 18)
+    + of(formDate, 28.0, 79.0, 16)
     + `</div>`;
 
   return `<!doctype html><html lang="he" dir="rtl"><head><meta charset="utf-8"><style>`
@@ -488,3 +484,4 @@ app.post("/api/contract-submissions", async (req, res) => {
 exports.api = functions
   .runWith({ memory: "1GB", timeoutSeconds: 120, secrets: ["SMTP_PASS", "AIRTABLE_TOKEN"] })
   .https.onRequest(app);
+
