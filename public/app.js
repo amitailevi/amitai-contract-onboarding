@@ -31,6 +31,11 @@ const REQUIRED_STEP0 = [
 let currentStep = 0;
 let bankApprovalFile = null;
 const MAX_UPLOAD_BYTES = 5 * 1024 * 1024; // 5MB
+// The hourly-wage fields auto-fill from role + certificate, but are editable.
+// These flags mark a wage the user has typed over, so recomputeDerived() won't
+// overwrite it (it re-applies the computed default only when the role/shift/cert
+// that determines the wage changes).
+let wageEdited1 = false, wageEdited2 = false;
 
 /* ---------------- helpers ---------------- */
 function escapeHtml(value) {
@@ -445,15 +450,20 @@ function setupStep1() {
     if (!isS && form.elements.roleAssistantType) form.elements.roleAssistantType.value = "";
   }
 
-  shiftEl.addEventListener("change", () => { updateShiftRoles(); recomputeDerived(); });
-  roleEl.addEventListener("change", () => { updateShiftRoles(); recomputeDerived(); });
-  if (role2El) role2El.addEventListener("change", () => { updateShiftRoles(); recomputeDerived(); });
+  // Mark a wage field as manually edited so recompute keeps the user's value.
+  if (form.elements.hourlyWage) form.elements.hourlyWage.addEventListener("input", () => { wageEdited1 = true; });
+  if (form.elements.hourlyWage2) form.elements.hourlyWage2.addEventListener("input", () => { wageEdited2 = true; });
+
+  // Changing an input that determines the wage re-applies the computed default.
+  shiftEl.addEventListener("change", () => { wageEdited1 = false; wageEdited2 = false; updateShiftRoles(); recomputeDerived(); });
+  roleEl.addEventListener("change", () => { wageEdited1 = false; updateShiftRoles(); recomputeDerived(); });
+  if (role2El) role2El.addEventListener("change", () => { wageEdited2 = false; updateShiftRoles(); recomputeDerived(); });
   const branchEl = form.elements.contractBranch;
   const frameworkEl = form.elements.roleAssistantType;
   if (branchEl) branchEl.addEventListener("change", recomputeDerived);
   if (frameworkEl) frameworkEl.addEventListener("change", recomputeDerived);
   if (form.elements.roleTeachingCert) {
-    Array.from(form.elements.roleTeachingCert).forEach((r) => r.addEventListener("change", recomputeDerived));
+    Array.from(form.elements.roleTeachingCert).forEach((r) => r.addEventListener("change", () => { wageEdited1 = false; wageEdited2 = false; recomputeDerived(); }));
   }
   updateShiftRoles();
   recomputeDerived();
@@ -506,14 +516,16 @@ function recomputeDerived() {
   const sub1 = document.getElementById("wageSub1");
   const sub2 = document.getElementById("wageSub2");
   const setSub = (el, text) => { if (el) { el.textContent = text; el.hidden = !text; } };
-  if (form.elements.hourlyWage) form.elements.hourlyWage.value = roleWage(role, cert);
+  // Fill the computed default only when the user hasn't typed over the field.
+  if (form.elements.hourlyWage && !wageEdited1) form.elements.hourlyWage.value = roleWage(role, cert);
   if (both) {
-    if (form.elements.hourlyWage2) form.elements.hourlyWage2.value = roleWage(role2, cert);
+    if (form.elements.hourlyWage2 && !wageEdited2) form.elements.hourlyWage2.value = roleWage(role2, cert);
     if (wageField2) wageField2.hidden = false;
     setSub(sub1, role ? `עבור שעות עבודה כ${role}` : "");
     setSub(sub2, role2 ? `עבור שעות עבודה כ${role2}` : "");
   } else {
     if (form.elements.hourlyWage2) form.elements.hourlyWage2.value = "";
+    wageEdited2 = false;
     if (wageField2) wageField2.hidden = true;
     setSub(sub1, "");
     setSub(sub2, "");
@@ -603,6 +615,10 @@ try {
 } catch (_) {
   localStorage.removeItem(STORAGE_KEY);
 }
+// Preserve a wage restored from a draft (treat it as user-set so it isn't
+// overwritten by the auto-compute when the wizard initialises).
+if (form.elements.hourlyWage && form.elements.hourlyWage.value.trim()) wageEdited1 = true;
+if (form.elements.hourlyWage2 && form.elements.hourlyWage2.value.trim()) wageEdited2 = true;
 setupUpload();
 setupStep0();
 setupStep1();
