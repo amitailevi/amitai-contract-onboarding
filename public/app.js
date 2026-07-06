@@ -567,8 +567,22 @@ btnNext.addEventListener("click", () => {
   if (currentStep === 0 && !validateStep0()) return;
   if (currentStep === 3 && !validateStep3()) return;
   saveDraft(true);
+  // Moving from bank details (step 5) to Form 101 (step 6): show a confirmation
+  // overlay before proceeding.
+  if (currentStep === 4) {
+    const ov = document.getElementById("step101Overlay");
+    if (ov) { ov.hidden = false; return; }
+  }
   goToStep(currentStep + 1);
 });
+const continueTo101 = document.getElementById("continueTo101");
+if (continueTo101) {
+  continueTo101.addEventListener("click", () => {
+    const ov = document.getElementById("step101Overlay");
+    if (ov) ov.hidden = true;
+    goToStep(5);
+  });
+}
 REQUIRED_DECLARATIONS.forEach((n) => {
   const el = form.elements[n];
   if (el) el.addEventListener("change", () => {

@@ -315,7 +315,16 @@ const AT = {
   manager: "fldqWOy83KS3wkRmO", declarations: "fldjIg8C9zDfBejuy", notes: "fldZoZX1pjFKLHT0X",
   bankName: "fldsCJ0IizdSXD41N", bankNum: "fldeGthiRLTglnGLk", branchNum: "fldc76U6VED20dQRe",
   account: "fldfDOVR4fg05ICAA", accountHolder: "fldKuIaouhxDZaonD", subId: "fldAxS1C6vNM1VTno",
-  sentAt: "fldIdrkNzui31iKsh"
+  sentAt: "fldIdrkNzui31iKsh",
+  // ----- Form 101 fields (grouped separately from the contract fields) -----
+  f101FirstName: "fldM9CqkV4MwzXNzi", f101LastName: "fldtOokK7t0Kh5Ozc",
+  f101BirthDate: "fldgXUJZoYTsVetee", f101ImmigrationDate: "fldLDIIUop06wuu7X",
+  f101Gender: "fldzKXMY3FJjWykun", f101Marital: "fldz77nNqtLUorkfF",
+  f101Resident: "fld1KziEoxXZRCM0P", f101Kibbutz: "fldbuzEonZEsHYWil",
+  f101HealthFund: "fld26SmWRtqeTvlDy", f101Mobile: "fldGFqIDmg4XLIKr8",
+  f101IncomeType: "fldaEJoP0suNaZAkA", f101OtherIncome: "flddXxGN3t5FAIz1u",
+  f101Spouse: "fldFRv6oCkkvdZ4cs", f101Children: "fldTSaEAsskZsLJfY",
+  f101Credits: "fld6vhOs3bWaPerFx"
 };
 
 // Create the Airtable row and attach the contract PDF. Never throws — a back-office
@@ -370,6 +379,45 @@ async function pushToAirtable(d, submissionId, pdfBuffer, pdfFilename, documents
   put(AT.accountHolder, d.accountHolder);
   put(AT.subId, submissionId);
   fields[AT.sentAt] = new Date().toISOString();
+
+  // ----- Form 101 (כרטיס עובד) — kept in the same record, grouped by the "101 ·" prefix -----
+  const spouseLines = [
+    d.spouseName && `שם: ${d.spouseName}`,
+    d.spouseId && `ת"ז: ${d.spouseId}`,
+    d.spouseBirthDate && `תאריך לידה: ${d.spouseBirthDate}`
+  ].filter(Boolean).join("\n");
+  const childLines = [1, 2, 3].map((i) => {
+    const n = d["child" + i + "Name"], cid = d["child" + i + "Id"], b = d["child" + i + "BirthDate"];
+    if (!n && !cid && !b) return "";
+    return [n, cid && `ת"ז ${cid}`, b && `לידה ${b}`].filter(Boolean).join(" · ");
+  }).filter(Boolean).join("\n");
+  const CREDIT_LABELS = {
+    creditResident: "תושב/ת ישראל", creditDisabled: "נכה 100% / עיוור",
+    creditLocality: "תושב/ת ביישוב מזכה", creditImmigrant: "עולה חדש/ה",
+    creditSpouseNoIncome: "בן/בת זוג ללא הכנסה", creditSeparatedParent: "הורה במשפחה חד-הורית",
+    creditChildrenCustody: "ילדים שבחזקתי (חלק ג)", creditToddlers: "פעוטות",
+    creditSingleParent: "הורה יחיד", creditChildSupport: "ילדים שאינם בחזקתי",
+    creditDisabledChild: "ילד/ה עם מוגבלות", creditAlimony: "מזונות לבן/בת זוג לשעבר",
+    creditYoungEmployee: "בן/בת 16-18", creditDischarged: "חייל/ת משוחרר/ת / שירות לאומי",
+    creditStudies: "סיום לימודים לתואר", creditReserve: "לוחם/ת מילואים"
+  };
+  const creditLines = Object.keys(CREDIT_LABELS).filter((k) => d[k]).map((k) => CREDIT_LABELS[k]).join("\n");
+
+  put(AT.f101FirstName, d.firstName);
+  put(AT.f101LastName, d.lastName);
+  put(AT.f101BirthDate, d.birthDate);
+  put(AT.f101ImmigrationDate, d.immigrationDate);
+  put(AT.f101Gender, d.gender);
+  put(AT.f101Marital, d.maritalStatus);
+  put(AT.f101Resident, d.isIsraeliResident);
+  put(AT.f101Kibbutz, d.kibbutzMember);
+  put(AT.f101HealthFund, d.healthFundMember);
+  put(AT.f101Mobile, d.mobile);
+  put(AT.f101IncomeType, d.incomeType);
+  put(AT.f101OtherIncome, d.otherIncome);
+  put(AT.f101Spouse, spouseLines);
+  put(AT.f101Children, childLines);
+  put(AT.f101Credits, creditLines);
 
   const createRes = await fetch(`https://api.airtable.com/v0/${AIRTABLE_BASE}/${AIRTABLE_TABLE}`, {
     method: "POST",
