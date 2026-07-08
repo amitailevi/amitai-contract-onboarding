@@ -538,7 +538,7 @@ function recomputeDerived() {
     let mgr = null;
     if (branch === "באר טוביה" && framework === "גני ילדים") mgr = "ימית יוסף";
     else if (branch === "באר טוביה" && framework === "בתי ספר") mgr = "רגינה חסון";
-    else if (branch === "ראש העין") mgr = "בת אל קגל";
+    else if (branch === "ראש העין") mgr = "בת אל כגן";
     if (mgr) mgrEl.value = mgr;
   }
 }
