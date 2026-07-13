@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex,nofollow">
+<title>ניהול עובדים — קליטה | כפיר צהרונים</title>
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--navy:#22314f;--navy-d:#1a2740;--accent:#E8853A;--accent-d:#c76b2c;--bg:#f4f6fa;--card:#fff;--line:#e4e7ee;--ink:#2b3240;--gray:#7d8598;--green:#2e9e5b;--green-l:#e7f6ec}
+body{font-family:'Rubik',sans-serif;color:var(--ink);background:var(--bg);min-height:100vh}
+.hidden{display:none!important}
+.gate{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+.gate-card{background:#fff;border-radius:20px;padding:38px 30px;max-width:360px;width:100%;text-align:center;box-shadow:0 16px 44px rgba(34,49,79,.16)}
+.gate-card h1{font-size:21px;color:var(--navy);margin-bottom:4px}
+.gate-card p{color:var(--gray);font-size:14px;margin-bottom:20px}
+.gate-card input{width:100%;padding:12px;text-align:center;border:1.5px solid var(--line);border-radius:12px;font-size:16px;margin-bottom:12px}
+.gate-card button{width:100%;padding:12px;background:var(--navy);color:#fff;border:none;border-radius:12px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer}
+.gate-err{color:#c0392b;font-size:13px;margin-top:10px;display:none}
+.page{max-width:1180px;margin:0 auto;padding:20px 18px 60px}
+.hdr{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;background:var(--navy);color:#fff;border-radius:18px;padding:16px 22px;margin-bottom:18px;box-shadow:0 10px 26px rgba(34,49,79,.18)}
+.hdr h1{font-size:20px;font-weight:700}
+.hdr .sub{font-size:12.5px;opacity:.8;margin-top:2px}
+.hdr-right{display:flex;align-items:center;gap:10px}
+.pill{font-size:12.5px;font-weight:600;background:rgba(255,255,255,.15);border-radius:999px;padding:6px 13px}
+.btn{font-family:inherit;font-weight:600;font-size:13px;padding:9px 15px;border-radius:11px;cursor:pointer;border:none}
+.btn.ghost{background:rgba(255,255,255,.12);color:#fff}.btn.ghost:hover{background:rgba(255,255,255,.22)}
+.btn.xls{background:var(--green);color:#fff;box-shadow:0 5px 13px rgba(46,158,91,.28)}
+.btn.refresh{background:#fff;border:1.5px solid var(--line);color:var(--navy)}
+.tools{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+.search{flex:1;min-width:200px;padding:11px 15px;border:1.5px solid var(--line);border-radius:12px;font-family:inherit;font-size:14px;background:#fff}
+.search:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(232,133,58,.14)}
+.wrap{background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:auto;box-shadow:0 8px 24px rgba(34,49,79,.06)}
+table{width:100%;border-collapse:collapse;font-size:13.5px;min-width:720px}
+thead{background:#eef1f7}
+th{padding:12px 12px;text-align:right;font-weight:700;color:var(--navy);font-size:11px;text-transform:uppercase;letter-spacing:.3px;border-bottom:2px solid #dbe0ea;white-space:nowrap}
+td{padding:11px 12px;border-bottom:1px solid var(--line);vertical-align:middle;white-space:nowrap}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:nth-child(even){background:#fafbfd}
+tbody tr:hover{background:#f0f4fb}
+.name-link{color:var(--accent-d);font-weight:700;cursor:pointer;text-decoration:none;border-bottom:1.5px dashed rgba(232,133,58,.5)}
+.name-link:hover{color:var(--accent)}
+.muted{color:#b9bfcc}
+.empty{padding:44px;text-align:center;color:var(--gray)}
+/* modal */
+.modal-bg{position:fixed;inset:0;background:rgba(28,39,64,.55);backdrop-filter:blur(3px);z-index:60;display:flex;align-items:center;justify-content:center;padding:20px}
+.modal{background:var(--card);border-radius:20px;max-width:860px;width:100%;max-height:88vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 26px 64px rgba(0,0,0,.3)}
+.modal-hd{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:18px 22px;background:var(--navy);color:#fff}
+.modal-hd h3{font-size:17px;font-weight:700}
+.modal-hd .msub{font-size:12.5px;opacity:.8;margin-top:2px}
+.modal-x{border:none;background:rgba(255,255,255,.15);color:#fff;width:34px;height:34px;border-radius:10px;cursor:pointer;font-size:15px;flex:none}
+.modal-x:hover{background:rgba(255,255,255,.28)}
+.modal-body{overflow:auto;padding:18px 22px}
+.sect{margin-bottom:20px}
+.sect-h{font-size:14px;font-weight:700;color:var(--navy);display:flex;align-items:center;gap:8px;padding-bottom:8px;margin-bottom:12px;border-bottom:2px solid #eef1f7}
+.sect-h::before{content:"";width:4px;height:16px;border-radius:3px;background:var(--accent)}
+.dl{display:grid;grid-template-columns:1fr 1fr;gap:8px 22px}
+@media(max-width:640px){.dl{grid-template-columns:1fr}}
+.dl .row{display:flex;justify-content:space-between;gap:12px;font-size:13.5px;padding:5px 0;border-bottom:1px dotted #eceff4}
+.dl .k{color:var(--gray);font-weight:500}
+.dl .v{font-weight:600;text-align:left;word-break:break-word}
+.v.yes{color:var(--green)}
+</style>
+</head>
+<body>
+<div id="gate" class="gate">
+  <div class="gate-card">
+    <h1>ניהול עובדים</h1>
+    <p>קליטת עובדים · כפיר צהרונים · גישה מורשית בלבד</p>
+    <input id="key" type="password" placeholder="קוד גישה" onkeydown="if(event.key==='Enter')checkKey()">
+    <button onclick="checkKey()">כניסה</button>
+    <div id="gerr" class="gate-err">קוד שגוי</div>
+  </div>
+</div>
+
+<div id="app" class="hidden">
+  <div class="page">
+    <header class="hdr">
+      <div><h1>🦁 ניהול עובדים — קליטה</h1><div class="sub" id="sub">טוען…</div></div>
+      <div class="hdr-right">
+        <span class="pill" id="pill">—</span>
+        <button class="btn refresh" onclick="refresh()">↻ רענון</button>
+        <button class="btn ghost" onclick="logout()">יציאה</button>
+      </div>
+    </header>
+    <div class="tools">
+      <button class="btn xls" onclick="exportXlsx()">⬇️ ייצוא Excel (לשקלולית)</button>
+      <input id="q" class="search" placeholder="🔍 חיפוש: שם, ת״ז, טלפון, מייל…" oninput="render()">
+    </div>
+    <div class="wrap"><table><thead><tr>
+      <th>שם העובד/ת</th><th>ת״ז</th><th>תפקיד</th><th>מסגרת</th><th>שכר/שעה</th><th>מייל</th><th>תאריך הגשה</th>
+    </tr></thead><tbody id="tbody"><tr><td colspan="7" class="empty">⏳ טוען…</td></tr></tbody></table></div>
+  </div>
+
+  <div id="modal" class="modal-bg hidden" onclick="if(event.target===this)closeModal()">
+    <div class="modal">
+      <div class="modal-hd"><div><h3 id="mName">—</h3><div class="msub" id="mSub"></div></div><button class="modal-x" onclick="closeModal()">✕</button></div>
+      <div class="modal-body" id="mBody"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const GROUPS = [
+  { key:'contract', title:'📄 חוזה', fields:[
+    ['contractEmployeeName','שם העובד/ת'],['contractEmployeeId','ת״ז'],['email','דוא״ל'],['contractDate','תאריך חתימה'],
+    ['contractCity','עיר'],['contractEmployeeAddress','כתובת'],['contractBranch','מסגרת / מקום עבודה'],['workShift','שיבוץ'],
+    ['contractRole','תפקיד'],['contractRole2','תפקיד בצהרון'],['roleTeachingCert','תעודת הוראה'],['roleAssistantType','סוג מסגרת'],
+    ['contractStartDate','תחילת העסקה'],['contractEndDate','סיום העסקה'],['workHours','שעות עבודה'],
+    ['hourlyWage','שכר לשעה (₪)'],['hourlyWage2','שכר לשעה — צהרון (₪)'],['directManager','ממונה ישיר/ה'],
+    ['contractConfidentiality','התחייבות סודיות'],['contractSafety','התחייבות בטיחות'],['contractDocuments','מסירת מסמכים'],
+    ['contractTaxConsent','אישור שימוש בפרטים'],['contractNotes','הערות'],['employeeSignatureName','חתימת העובד/ת'],['companySignatureName','נציג/ת החברה'] ]},
+  { key:'form101', title:'🧾 טופס 101', fields:[
+    ['firstName','שם פרטי'],['lastName','שם משפחה'],['birthDate','תאריך לידה'],['immigrationDate','תאריך עלייה'],
+    ['phone','טלפון'],['mobile','נייד'],['zip','מיקוד'],['gender','מין'],['maritalStatus','מצב משפחתי'],
+    ['isIsraeliResident','תושב/ת ישראל'],['healthFundMember','קופת חולים'],['kibbutzMember','חבר/ת קיבוץ'],
+    ['incomeType','סוג הכנסה'],['otherIncome','הכנסות נוספות'],
+    ['spouseName','בן/בת זוג — שם'],['spouseId','בן/בת זוג — ת״ז'],['spouseBirthDate','בן/בת זוג — לידה'],
+    ['child1Name','ילד/ה 1 — שם'],['child1Id','ילד/ה 1 — ת״ז'],['child1BirthDate','ילד/ה 1 — לידה'],
+    ['child2Name','ילד/ה 2 — שם'],['child2Id','ילד/ה 2 — ת״ז'],['child2BirthDate','ילד/ה 2 — לידה'],
+    ['child3Name','ילד/ה 3 — שם'],['child3Id','ילד/ה 3 — ת״ז'],['child3BirthDate','ילד/ה 3 — לידה'],
+    ['creditResident','תושב/ת ישראל (זיכוי)'],['creditDisabled','נכה 100%/עיוור'],['creditLocality','יישוב מזכה'],['creditImmigrant','עולה חדש/ה'],
+    ['creditSpouseNoIncome','בן/בת זוג ללא הכנסה'],['creditSeparatedParent','חד-הורי בנפרד'],['creditChildrenCustody','ילדים בחזקתי'],
+    ['creditToddlers','פעוטות'],['creditSingleParent','הורה יחיד'],['creditChildSupport','ילדים לא בחזקתי'],['creditDisabledChild','ילד עם מוגבלות'],
+    ['creditAlimony','מזונות'],['creditYoungEmployee','גיל 16–18'],['creditDischarged','חייל משוחרר/לאומי'],['creditStudies','סיום לימודים'],['creditReserve','מילואים'] ]},
+  { key:'bank', title:'🏦 פרטי חשבון בנק', fields:[
+    ['bankName','שם הבנק'],['bankNumber','מספר בנק'],['branchNumber','מספר סניף'],['accountNumber','מספר חשבון'],['accountHolder','בעל/ת החשבון'] ]}
+];
+
+let employees=[], adminKey=sessionStorage.getItem('onb_key')||'';
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const isYes=v=>v===true||v==='true'||v==='כן'||v==='on';
+function val(fd,k){ const v=fd[k]; if(v===true)return {t:'✓',yes:true}; if(v===false||v===''||v==null)return {t:'—',muted:true}; return {t:String(v)}; }
+function fmtDate(ms){ try{return ms?new Date(ms).toLocaleDateString('he-IL'):'—';}catch(e){return '—';} }
+
+async function fetchEmployees(key){
+  const r=await fetch('/api/getEmployees',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key})});
+  if(r.status===401) throw new Error('unauthorized');
+  if(!r.ok) throw new Error('server_error');
+  return (await r.json()).employees||[];
+}
+async function checkKey(){
+  $('gerr').style.display='none';
+  try{ employees=await fetchEmployees($('key').value); adminKey=$('key').value; sessionStorage.setItem('onb_key',adminKey); openApp(); }
+  catch(e){ $('gerr').style.display='block'; }
+}
+function logout(){ sessionStorage.removeItem('onb_key'); location.reload(); }
+function openApp(){ $('gate').classList.add('hidden'); $('app').classList.remove('hidden'); stamp(); render(); }
+function stamp(){ $('sub').textContent=`עודכן ${new Date().toLocaleTimeString('he-IL')}`; $('pill').textContent=`${employees.length} עובדים`; }
+async function refresh(){ try{ employees=await fetchEmployees(adminKey); stamp(); render(); }catch(e){ if(e.message==='unauthorized') logout(); } }
+window.checkKey=checkKey; window.logout=logout; window.refresh=refresh;
+if(adminKey){ fetchEmployees(adminKey).then(e=>{employees=e;openApp();}).catch(()=>sessionStorage.removeItem('onb_key')); }
+
+function role(fd){ return [fd.contractRole,fd.contractRole2].filter(Boolean).join(' / ')||'—'; }
+function filtered(){
+  const q=$('q').value.toLowerCase().trim();
+  if(!q) return employees;
+  return employees.filter(e=>{const fd=e.formData||{}; return [fd.contractEmployeeName,fd.contractEmployeeId,fd.phone,fd.mobile,fd.email,e.email,role(fd),fd.contractBranch].filter(Boolean).join(' ').toLowerCase().includes(q);});
+}
+function render(){
+  const list=filtered();
+  $('tbody').innerHTML = list.length ? list.map((e,i)=>{
+    const fd=e.formData||{};
+    const name=fd.contractEmployeeName||e.fullName||'—';
+    const idx=employees.indexOf(e);
+    return `<tr>
+      <td><a class="name-link" onclick="openEmp(${idx})">${esc(name)}</a></td>
+      <td>${esc(fd.contractEmployeeId||'—')}</td>
+      <td>${esc(role(fd))}</td>
+      <td>${esc(fd.contractBranch||'—')}</td>
+      <td>${esc(fd.hourlyWage?fd.hourlyWage+' ₪':'—')}</td>
+      <td>${esc(fd.email||e.email||'—')}</td>
+      <td>${fmtDate(e.createdAt)}</td>
+    </tr>`;
+  }).join('') : '<tr><td colspan="7" class="empty">📭 אין עובדים תואמים</td></tr>';
+}
+window.render=render;
+
+function openEmp(i){
+  const e=employees[i], fd=e.formData||{};
+  $('mName').textContent=fd.contractEmployeeName||e.fullName||'—';
+  $('mSub').textContent=`ת״ז ${fd.contractEmployeeId||'—'} · הוגש ${fmtDate(e.createdAt)}`;
+  $('mBody').innerHTML = GROUPS.map(g=>`
+    <div class="sect"><div class="sect-h">${g.title}</div><div class="dl">${
+      g.fields.map(([k,lbl])=>{const o=val(fd,k);return `<div class="row"><span class="k">${esc(lbl)}</span><span class="v ${o.yes?'yes':''} ${o.muted?'muted':''}">${o.muted?'—':esc(o.t)}</span></div>`;}).join('')
+    }</div></div>`).join('');
+  $('modal').classList.remove('hidden');
+}
+function closeModal(){ $('modal').classList.add('hidden'); }
+window.openEmp=openEmp; window.closeModal=closeModal;
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
+
+function exportXlsx(){
+  const rows=employees.map(e=>{
+    const fd=e.formData||{}; const row={};
+    row['תאריך הגשה']=fmtDate(e.createdAt);
+    GROUPS.forEach(g=>g.fields.forEach(([k,lbl])=>{ const v=fd[k]; row[lbl]= v===true?'כן':(v===false?'לא':(v==null?'':String(v))); }));
+    return row;
+  });
+  const ws=XLSX.utils.json_to_sheet(rows);
+  const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'עובדים');
+  XLSX.writeFile(wb, `employees-${new Date().toISOString().slice(0,10)}.xlsx`);
+}
+window.exportXlsx=exportXlsx;
+</script>
+</body>
+</html>

@@ -529,6 +529,28 @@ app.post("/api/contract-submissions", async (req, res) => {
   }
 });
 
+// Back-office: server-gated read of all contract submissions (employees).
+// Access is denied to clients by Firestore rules; this route uses the Admin SDK
+// and requires the shared ADMIN_PASSWORD.
+app.post("/api/getEmployees", async (req, res) => {
+  const key = (req.body && req.body.key) || String(req.headers.authorization || "").replace(/^Bearer /, "");
+  const ADMIN = process.env.ADMIN_PASSWORD || "";
+  if (!ADMIN || key !== ADMIN) return res.status(401).json({ error: "unauthorized" });
+  try {
+    const snap = await admin.firestore().collection("contractSubmissions").orderBy("createdAt", "desc").limit(3000).get();
+    const toMillis = (v) => (v && typeof v.toMillis === "function") ? v.toMillis() : v;
+    const employees = [];
+    snap.forEach((d) => {
+      const o = d.data() || {};
+      employees.push({ id: d.id, fullName: o.fullName || "", email: o.email || "", status: o.status || "", createdAt: toMillis(o.createdAt), formData: o.formData || {} });
+    });
+    res.json({ ok: true, count: employees.length, employees });
+  } catch (e) {
+    console.error("getEmployees error:", e);
+    res.status(500).json({ error: "server_error" });
+  }
+});
+
 exports.api = functions
   .runWith({ memory: "1GB", timeoutSeconds: 120, secrets: ["SMTP_PASS", "AIRTABLE_TOKEN"] })
   .https.onRequest(app);
