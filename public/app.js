@@ -484,6 +484,7 @@ function roleWage(role, cert) {
   if (role === "גננת" || role === "מורה") return cert === "כן" ? "75" : (cert === "לא" ? "60" : "");
   if (role === "סייעת") return "45";
   if (role === "רכזת") return "75";
+  if (role === "סגנית") return "75";
   return "";
 }
 
