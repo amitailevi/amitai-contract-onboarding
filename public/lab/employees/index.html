@@ -86,12 +86,13 @@ tbody tr:hover{background:#f0f4fb}
       </div>
     </header>
     <div class="tools">
-      <button class="btn xls" onclick="exportXlsx()">⬇️ ייצוא Excel (לשקלולית)</button>
+      <button id="expBtn" class="btn xls" onclick="exportXlsx()">⬇️ ייצוא לשקלולית</button>
       <input id="q" class="search" placeholder="🔍 חיפוש: שם, ת״ז, טלפון, מייל…" oninput="render()">
     </div>
     <div class="wrap"><table><thead><tr>
+      <th style="width:34px;text-align:center"><input type="checkbox" id="chkAll" onclick="toggleAll(this.checked)" title="בחר/י הכל"></th>
       <th>שם העובד/ת</th><th>ת״ז</th><th>תפקיד</th><th>מסגרת</th><th>שכר/שעה</th><th>מייל</th><th>תאריך הגשה</th>
-    </tr></thead><tbody id="tbody"><tr><td colspan="7" class="empty">⏳ טוען…</td></tr></tbody></table></div>
+    </tr></thead><tbody id="tbody"><tr><td colspan="8" class="empty">⏳ טוען…</td></tr></tbody></table></div>
   </div>
 
   <div id="modal" class="modal-bg hidden" onclick="if(event.target===this)closeModal()">
@@ -129,7 +130,7 @@ const GROUPS = [
     ['bankName','שם הבנק'],['bankNumber','מספר בנק'],['branchNumber','מספר סניף'],['accountNumber','מספר חשבון'],['accountHolder','בעל/ת החשבון'] ]}
 ];
 
-let employees=[], adminKey=sessionStorage.getItem('onb_key')||'';
+let employees=[], adminKey=sessionStorage.getItem('onb_key')||'', selected=new Set();
 const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const isYes=v=>v===true||v==='true'||v==='כן'||v==='on';
@@ -162,11 +163,12 @@ function filtered(){
 }
 function render(){
   const list=filtered();
-  $('tbody').innerHTML = list.length ? list.map((e,i)=>{
+  $('tbody').innerHTML = list.length ? list.map((e)=>{
     const fd=e.formData||{};
     const name=fd.contractEmployeeName||e.fullName||'—';
     const idx=employees.indexOf(e);
     return `<tr>
+      <td style="text-align:center"><input type="checkbox" class="rowchk" onclick="toggleRow('${e.id}',this.checked)" ${selected.has(e.id)?'checked':''}></td>
       <td><a class="name-link" onclick="openEmp(${idx})">${esc(name)}</a></td>
       <td>${esc(fd.contractEmployeeId||'—')}</td>
       <td>${esc(role(fd))}</td>
@@ -175,9 +177,17 @@ function render(){
       <td>${esc(fd.email||e.email||'—')}</td>
       <td>${fmtDate(e.createdAt)}</td>
     </tr>`;
-  }).join('') : '<tr><td colspan="7" class="empty">📭 אין עובדים תואמים</td></tr>';
+  }).join('') : '<tr><td colspan="8" class="empty">📭 אין עובדים תואמים</td></tr>';
+  updateSelUI();
 }
-window.render=render;
+function toggleRow(id,on){ if(on)selected.add(id); else selected.delete(id); updateSelUI(); }
+function toggleAll(on){ filtered().forEach(e=>{ if(on)selected.add(e.id); else selected.delete(e.id); }); render(); }
+function updateSelUI(){
+  const vis=filtered(); const selVis=vis.filter(e=>selected.has(e.id)).length;
+  const all=$('chkAll'); if(all){ all.checked=vis.length>0&&selVis===vis.length; all.indeterminate=selVis>0&&selVis<vis.length; }
+  const b=$('expBtn'); if(b) b.textContent = selected.size ? `⬇️ ייצוא ${selected.size} לשקלולית` : '⬇️ ייצוא לשקלולית';
+}
+window.render=render; window.toggleRow=toggleRow; window.toggleAll=toggleAll;
 
 function openEmp(i){
   const e=employees[i], fd=e.formData||{};
@@ -194,7 +204,9 @@ window.openEmp=openEmp; window.closeModal=closeModal;
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
 
 function exportXlsx(){
-  const rows=employees.map(e=>{
+  const chosen=employees.filter(e=>selected.has(e.id));
+  if(!chosen.length){ alert('יש לבחור לפחות עובד/ת אחד/ת לייצוא (סמנו בתיבות שמימין, או "בחר/י הכל").'); return; }
+  const rows=chosen.map(e=>{
     const fd=e.formData||{}; const row={};
     row['תאריך הגשה']=fmtDate(e.createdAt);
     GROUPS.forEach(g=>g.fields.forEach(([k,lbl])=>{ const v=fd[k]; row[lbl]= v===true?'כן':(v===false?'לא':(v==null?'':String(v))); }));
