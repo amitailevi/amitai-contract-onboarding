@@ -18,8 +18,8 @@ const STEP_TITLES = [
   "פרטי הצדדים",
   "תנאי ההעסקה",
   "הצהרות וסעיפים מיוחדים",
-  "פרטי בנק",
   "טופס 101",
+  "פרטי בנק",
   "סיכום והגשה"
 ];
 const REQUIRED_STEP0 = [
@@ -115,7 +115,7 @@ function goToStep(n) {
   btnNext.hidden = onLast;
   finalActions.hidden = !onLast;
   recomputeDerived();
-  if (currentStep === 5) prefill101();
+  if (currentStep === 4) prefill101();
   if (onLast) renderContractPreview();
   updateProgress();
   window.scrollTo({ top: 0, behavior: "smooth" });
@@ -581,22 +581,27 @@ btnNext.addEventListener("click", () => {
   if (currentStep === 0 && !validateStep0()) return;
   if (currentStep === 3 && !validateStep3()) return;
   saveDraft(true);
-  // Moving from bank details (step 5) to Form 101 (step 6): show a confirmation
-  // overlay before proceeding.
-  if (currentStep === 4) {
+  // Step 4 (declarations) → Step 5 (Form 101): confirmation overlay with a skip option.
+  if (currentStep === 3) {
     const ov = document.getElementById("step101Overlay");
+    if (ov) { ov.hidden = false; return; }
+  }
+  // Step 5 (Form 101) → Step 6 (bank details): confirmation overlay with a skip option.
+  if (currentStep === 4) {
+    const ov = document.getElementById("stepBankOverlay");
     if (ov) { ov.hidden = false; return; }
   }
   goToStep(currentStep + 1);
 });
+function hideOverlay(id) { const ov = document.getElementById(id); if (ov) ov.hidden = true; }
 const continueTo101 = document.getElementById("continueTo101");
-if (continueTo101) {
-  continueTo101.addEventListener("click", () => {
-    const ov = document.getElementById("step101Overlay");
-    if (ov) ov.hidden = true;
-    goToStep(5);
-  });
-}
+if (continueTo101) continueTo101.addEventListener("click", () => { hideOverlay("step101Overlay"); goToStep(4); });
+const skip101 = document.getElementById("skip101");
+if (skip101) skip101.addEventListener("click", () => { hideOverlay("step101Overlay"); goToStep(5); });
+const continueToBank = document.getElementById("continueToBank");
+if (continueToBank) continueToBank.addEventListener("click", () => { hideOverlay("stepBankOverlay"); goToStep(5); });
+const skipBank = document.getElementById("skipBank");
+if (skipBank) skipBank.addEventListener("click", () => { hideOverlay("stepBankOverlay"); goToStep(6); });
 REQUIRED_DECLARATIONS.forEach((n) => {
   const el = form.elements[n];
   if (el) el.addEventListener("change", () => {

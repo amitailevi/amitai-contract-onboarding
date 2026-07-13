@@ -333,7 +333,7 @@
       </section>
 
       <!-- Step 4: Bank details -->
-      <section class="step-card" data-step="4" hidden>
+      <section class="step-card" data-step="5" hidden>
         <div class="step-head">
           <h2>פרטי בנק</h2>
           <p>לצורך העברת שכר.</p>
@@ -372,7 +372,7 @@
       </section>
 
       <!-- Step 5: Form 101 -->
-      <section class="step-card" data-step="5" hidden>
+      <section class="step-card" data-step="4" hidden>
         <div class="step-head">
           <h2>טופס 101 — כרטיס עובד</h2>
           <p>פרטים לצורך תיאום מס ונקודות זיכוי. חלק מהפרטים מולאו אוטומטית לפי מה שהזנת.</p>
@@ -512,7 +512,20 @@
       <div class="success-check">✓</div>
       <h3>הפרטים נקלטו!</h3>
       <p>כעת נמלא את טופס 101 (כרטיס עובד), הנדרש לצורך הקליטה וחישוב ניכויי המס.</p>
-      <button type="button" class="btn primary" id="continueTo101">המשך לטופס 101</button>
+      <button type="button" class="btn primary" id="continueTo101" style="display:block;width:100%">המשך לטופס 101</button>
+      <button type="button" class="btn ghost" id="skip101" style="display:block;width:100%;margin-top:10px">דלג</button>
+      <div style="margin-top:8px;color:var(--muted);font-size:.82rem">כבר יש לי טופס 101</div>
+    </div>
+  </div>
+
+  <div class="overlay" id="stepBankOverlay" hidden role="alertdialog" aria-live="assertive">
+    <div class="overlay-card success">
+      <div class="success-check">✓</div>
+      <h3>הפרטים נקלטו!</h3>
+      <p>כעת נמלא את פרטי חשבון הבנק לתשלום השכר.</p>
+      <button type="button" class="btn primary" id="continueToBank" style="display:block;width:100%">המשך לפרטי חשבון בנק</button>
+      <button type="button" class="btn ghost" id="skipBank" style="display:block;width:100%;margin-top:10px">דלג</button>
+      <div style="margin-top:8px;color:var(--muted);font-size:.82rem">קיימים כבר פרטי חשבון</div>
     </div>
   </div>
 
