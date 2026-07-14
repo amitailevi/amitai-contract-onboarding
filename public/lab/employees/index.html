@@ -226,7 +226,9 @@ function exportXlsx(){
   if(!chosen.length){ alert('יש לבחור לפחות עובד/ת אחד/ת לייצוא (סמנו בתיבות שמימין, או "בחר/י הכל").'); return; }
   const aoa=[SHIK_HEADERS, ...chosen.map(shikRow)];
   const ws=XLSX.utils.aoa_to_sheet(aoa);
+  ws['!views']=[{RTL:true}];                       // right-to-left: column A (מספר זהות) shows rightmost
   const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'גליון1');
+  wb.Workbook={Views:[{RTL:true}]};
   XLSX.writeFile(wb, `shiklulit-employees-${new Date().toISOString().slice(0,10)}.xlsx`);
 }
 window.exportXlsx=exportXlsx;
