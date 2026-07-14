@@ -497,7 +497,7 @@ app.post("/api/contract-submissions", async (req, res) => {
       idNumberMasked: idNum ? `***${idNum.slice(-4)}` : "",
       source: body.source || "contract-onboarding-web",
       status: "submitted",
-      transferred: false,
+      shikStatus: "חדש",            // שקלולית status: "חדש" | "נוצר בשקלולית"
       formData,
       createdAt: now,
       updatedAt: now
@@ -564,7 +564,8 @@ app.post("/api/getEmployees", async (req, res) => {
       const o = d.data() || {};
       employees.push({
         id: d.id, fullName: o.fullName || "", email: o.email || "", status: o.status || "",
-        employeeNumber: o.employeeNumber || null, transferred: !!o.transferred,
+        employeeNumber: o.employeeNumber || null,
+        shikStatus: o.shikStatus || (o.transferred ? "נוצר בשקלולית" : "חדש"),
         createdAt: toMillis(o.createdAt), formData: o.formData || {}
       });
     });
@@ -582,8 +583,12 @@ app.post("/api/updateEmployee", async (req, res) => {
   if (!ADMIN || b.key !== ADMIN) return res.status(401).json({ error: "unauthorized" });
   const id = String(b.id || "").trim();
   if (!id) return res.status(400).json({ error: "missing_id" });
+  const SHIK_STATUSES = ["חדש", "נוצר בשקלולית"];
   const upd = {};
-  if (b.transferred !== undefined) upd.transferred = !!b.transferred;
+  if (b.shikStatus !== undefined) {
+    if (!SHIK_STATUSES.includes(b.shikStatus)) return res.status(400).json({ error: "invalid_status" });
+    upd.shikStatus = b.shikStatus;
+  }
   if (b.employeeNumber !== undefined) upd.employeeNumber = Number(b.employeeNumber) || null;
   if (!Object.keys(upd).length) return res.status(400).json({ error: "nothing_to_update" });
   upd.updatedAt = admin.firestore.FieldValue.serverTimestamp();
