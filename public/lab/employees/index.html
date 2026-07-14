@@ -90,9 +90,11 @@ tbody tr:hover{background:#f0f4fb}
       <input id="q" class="search" placeholder="🔍 חיפוש: שם, ת״ז, טלפון, מייל…" oninput="render()">
     </div>
     <div class="wrap"><table><thead><tr>
-      <th style="width:34px;text-align:center"><input type="checkbox" id="chkAll" onclick="toggleAll(this.checked)" title="בחר/י הכל"></th>
+      <th style="width:34px;text-align:center"><input type="checkbox" id="chkAll" onclick="toggleAll(this.checked)" title="בחר/י לייצוא"></th>
+      <th style="width:56px;text-align:center">הועבר<br><span style="font-weight:400;font-size:9px">לשקלולית</span></th>
+      <th>מס׳ עובד</th>
       <th>שם העובד/ת</th><th>ת״ז</th><th>תפקיד</th><th>מסגרת</th><th>שכר/שעה</th><th>מייל</th><th>תאריך הגשה</th>
-    </tr></thead><tbody id="tbody"><tr><td colspan="8" class="empty">⏳ טוען…</td></tr></tbody></table></div>
+    </tr></thead><tbody id="tbody"><tr><td colspan="10" class="empty">⏳ טוען…</td></tr></tbody></table></div>
   </div>
 
   <div id="modal" class="modal-bg hidden" onclick="if(event.target===this)closeModal()">
@@ -167,8 +169,10 @@ function render(){
     const fd=e.formData||{};
     const name=fd.contractEmployeeName||e.fullName||'—';
     const idx=employees.indexOf(e);
-    return `<tr>
+    return `<tr${e.transferred?' style="background:#f2fbf5"':''}>
       <td style="text-align:center"><input type="checkbox" class="rowchk" onclick="toggleRow('${e.id}',this.checked)" ${selected.has(e.id)?'checked':''}></td>
+      <td style="text-align:center"><input type="checkbox" class="trchk" onclick="toggleTransferred('${e.id}',this.checked)" ${e.transferred?'checked':''} title="סמן/י שהועבר לשקלולית"></td>
+      <td style="font-weight:700;color:var(--navy)">${e.employeeNumber?esc(String(e.employeeNumber)):'<span class="muted">—</span>'}</td>
       <td><a class="name-link" onclick="openEmp(${idx})">${esc(name)}</a></td>
       <td>${esc(fd.contractEmployeeId||'—')}</td>
       <td>${esc(role(fd))}</td>
@@ -177,9 +181,18 @@ function render(){
       <td>${esc(fd.email||e.email||'—')}</td>
       <td>${fmtDate(e.createdAt)}</td>
     </tr>`;
-  }).join('') : '<tr><td colspan="8" class="empty">📭 אין עובדים תואמים</td></tr>';
+  }).join('') : '<tr><td colspan="10" class="empty">📭 אין עובדים תואמים</td></tr>';
   updateSelUI();
 }
+async function toggleTransferred(id,on){
+  const e=employees.find(x=>x.id===id); if(e) e.transferred=on;
+  render();
+  try{
+    const r=await fetch('/api/updateEmployee',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:adminKey,id,transferred:on})});
+    if(!r.ok) throw new Error('failed');
+  }catch(err){ if(e) e.transferred=!on; render(); alert('שמירת הסימון נכשלה — נסו שוב.'); }
+}
+window.toggleTransferred=toggleTransferred;
 function toggleRow(id,on){ if(on)selected.add(id); else selected.delete(id); updateSelUI(); }
 function toggleAll(on){ filtered().forEach(e=>{ if(on)selected.add(e.id); else selected.delete(e.id); }); render(); }
 function updateSelUI(){
@@ -203,27 +216,43 @@ function closeModal(){ $('modal').classList.add('hidden'); }
 window.openEmp=openEmp; window.closeModal=closeModal;
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
 
-// Columns must match the שקלולית import template exactly (headers + order).
-const SHIK_HEADERS = ["מספר זהות","שם משפחה","שם פרטי","תאריך לידה","רחוב","בית","עיר","טל' נייד","Email","תאריך תחילת עבודה","מין","מצב משפחתי","בת/בן זוג - ת.ז.","בת/בן זוג - שם משפחה","בת/בן זוג - שם פרטי","בת/בן זוג - תאריך לידה","בת/בן זוג - תאריך עלייה","בת/בן זוג - עובד/ת","תאריך עלייה","ילד 1 - ת.ז.","ילד 1 - שם פרטי","ילד 1 - תאריך לידה","ילד 2 - ת.ז.","ילד 2 - שם פרטי","ילד 2 - תאריך לידה","ילד 3 - ת.ז.","ילד 3 - שם פרטי","ילד 3 - תאריך לידה","ילד 4 - ת.ז.","ילד 4 - שם פרטי","ילד 4 - תאריך לידה","ילד 5 - ת.ז.","ילד 5 - שם פרטי","ילד 5 - תאריך לידה","בנק-קוד בנק","בנק-קוד סניף","בנק-מספר חשבון"];
+// Column order/values per שקלולית's import (its error report proved it expects
+// "מספר עובד" as column 4 — the supplied template omitted it, which shifted
+// every later column by one).
+const SHIK_HEADERS = ["מספר זהות","שם משפחה","שם פרטי","מספר עובד","תאריך לידה","רחוב","בית","עיר","טל' נייד","Email","תאריך תחילת עבודה","מין","מצב משפחתי","בת/בן זוג - ת.ז.","בת/בן זוג - שם משפחה","בת/בן זוג - שם פרטי","בת/בן זוג - תאריך לידה","בת/בן זוג - תאריך עלייה","בת/בן זוג - עובד/ת","תאריך עלייה","ילד 1 - ת.ז.","ילד 1 - שם פרטי","ילד 1 - תאריך לידה","ילד 2 - ת.ז.","ילד 2 - שם פרטי","ילד 2 - תאריך לידה","ילד 3 - ת.ז.","ילד 3 - שם פרטי","ילד 3 - תאריך לידה","ילד 4 - ת.ז.","ילד 4 - שם פרטי","ילד 4 - תאריך לידה","ילד 5 - ת.ז.","ילד 5 - שם פרטי","ילד 5 - תאריך לידה","בנק-קוד בנק","בנק-קוד סניף","בנק-מספר חשבון"];
 const isoIl = v => { const m=String(v||'').match(/^(\d{4})-(\d{2})-(\d{2})/); return m?`${m[3]}/${m[2]}/${m[1]}`:String(v||''); };
 const nameParts = full => { const t=String(full||'').trim().split(/\s+/).filter(Boolean); return { first:t[0]||'', last:t.slice(1).join(' ') }; };
 const addrParts = a => { const s=String(a||'').trim(); const m=s.match(/^(.*?)[\s,\\/]*(\d+)\s*$/); return m?{ street:m[1].trim(), house:m[2] }:{ street:s, house:'' }; };
+const digits = v => String(v==null?'':v).replace(/\D/g,'');
+const genderCode = v => { const s=String(v||''); return s.startsWith('ז')?'ז' : s.startsWith('נ')?'נ' : ''; };   // שקלולית: ז/נ
+const maritalCode = v => { const s=String(v||'');
+  if(s.startsWith('רווק')) return 'ר'; if(s.startsWith('נשוי')) return 'נ'; if(s.startsWith('גרוש')) return 'ג';
+  if(s.startsWith('אלמן')) return 'א'; if(s.startsWith('פרוד')) return 'פ'; return ''; };
+const spouseWorks = fd => { const has=digits(fd.spouseId)||String(fd.spouseName||'').trim(); if(!has) return '';
+  return fd.creditSpouseNoIncome===true ? 'ל' : 'כ'; };                                                        // שקלולית: כ/ל
 function shikRow(e){
   const fd=e.formData||{};
   const en = (fd.firstName||fd.lastName) ? { first:fd.firstName||'', last:fd.lastName||'' } : nameParts(fd.contractEmployeeName);
   const ad = addrParts(fd.contractEmployeeAddress), sp = nameParts(fd.spouseName);
   return [
-    fd.contractEmployeeId, en.last, en.first, isoIl(fd.birthDate), ad.street, ad.house, fd.contractCity,
-    fd.mobile||fd.phone, fd.email||e.email, isoIl(fd.contractStartDate), fd.gender, fd.maritalStatus,
-    fd.spouseId, sp.last, sp.first, isoIl(fd.spouseBirthDate), '', '', isoIl(fd.immigrationDate),
-    fd.child1Id, fd.child1Name, isoIl(fd.child1BirthDate), fd.child2Id, fd.child2Name, isoIl(fd.child2BirthDate),
-    fd.child3Id, fd.child3Name, isoIl(fd.child3BirthDate), '','','', '','','',
-    fd.bankNumber, fd.branchNumber, fd.accountNumber
+    digits(fd.contractEmployeeId), en.last, en.first, e.employeeNumber||'', isoIl(fd.birthDate),
+    ad.street, String(ad.house||'').slice(0,5), fd.contractCity,
+    digits(fd.mobile||fd.phone).slice(0,10), fd.email||e.email, isoIl(fd.contractStartDate),
+    genderCode(fd.gender), maritalCode(fd.maritalStatus),
+    digits(fd.spouseId), sp.last, sp.first, isoIl(fd.spouseBirthDate), '', spouseWorks(fd),
+    isoIl(fd.immigrationDate),
+    digits(fd.child1Id), fd.child1Name, isoIl(fd.child1BirthDate),
+    digits(fd.child2Id), fd.child2Name, isoIl(fd.child2BirthDate),
+    digits(fd.child3Id), fd.child3Name, isoIl(fd.child3BirthDate),
+    '','','', '','','',
+    digits(fd.bankNumber), digits(fd.branchNumber), digits(fd.accountNumber)
   ].map(v => v==null ? '' : String(v));
 }
 function exportXlsx(){
   const chosen=employees.filter(e=>selected.has(e.id));
   if(!chosen.length){ alert('יש לבחור לפחות עובד/ת אחד/ת לייצוא (סמנו בתיבות שמימין, או "בחר/י הכל").'); return; }
+  const noNum=chosen.filter(e=>!e.employeeNumber);
+  if(noNum.length && !confirm(`${noNum.length} מהעובדים שנבחרו ללא מספר עובד — שקלולית תדחה אותם.\nלהמשיך בכל זאת?`)) return;
   const aoa=[SHIK_HEADERS, ...chosen.map(shikRow)];
   const ws=XLSX.utils.aoa_to_sheet(aoa);
   ws['!views']=[{RTL:true}];                       // right-to-left: column A (מספר זהות) shows rightmost

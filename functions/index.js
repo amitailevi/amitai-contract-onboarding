@@ -457,6 +457,22 @@ async function pushToAirtable(d, submissionId, pdfBuffer, pdfFilename, documents
 }
 
 /* ---------------- routes ---------------- */
+/* ---------------- employee numbers ----------------
+   שקלולית requires a "מספר עובד". 240 was the last number already in שקלולית
+   (אלה רן); 241-243 were assigned by hand to the three employees who were not
+   yet there, so every NEW submission starts at 244. Counter lives in
+   meta/employeeCounter and is bumped transactionally. */
+const EMP_COUNTER_REF = () => admin.firestore().doc("meta/employeeCounter");
+const FIRST_NEW_EMPLOYEE_NUMBER = 244;
+async function nextEmployeeNumber() {
+  return admin.firestore().runTransaction(async (t) => {
+    const snap = await t.get(EMP_COUNTER_REF());
+    const next = (snap.exists && Number(snap.data().next)) || FIRST_NEW_EMPLOYEE_NUMBER;
+    t.set(EMP_COUNTER_REF(), { next: next + 1 }, { merge: true });
+    return next;
+  });
+}
+
 app.post("/api/contract-submissions", async (req, res) => {
   try {
     const body = req.body || {};
@@ -470,14 +486,18 @@ app.post("/api/contract-submissions", async (req, res) => {
     const idNum = String(formData.contractEmployeeId || "").replace(/[^\dA-Za-z]/g, "");
     const now = admin.firestore.FieldValue.serverTimestamp();
 
+    const employeeNumber = await nextEmployeeNumber();
+
     const submissionRef = admin.firestore().collection("contractSubmissions").doc();
     await submissionRef.set({
       submissionId: submissionRef.id,
+      employeeNumber,
       fullName,
       email: formData.email,
       idNumberMasked: idNum ? `***${idNum.slice(-4)}` : "",
       source: body.source || "contract-onboarding-web",
       status: "submitted",
+      transferred: false,
       formData,
       createdAt: now,
       updatedAt: now
@@ -542,11 +562,36 @@ app.post("/api/getEmployees", async (req, res) => {
     const employees = [];
     snap.forEach((d) => {
       const o = d.data() || {};
-      employees.push({ id: d.id, fullName: o.fullName || "", email: o.email || "", status: o.status || "", createdAt: toMillis(o.createdAt), formData: o.formData || {} });
+      employees.push({
+        id: d.id, fullName: o.fullName || "", email: o.email || "", status: o.status || "",
+        employeeNumber: o.employeeNumber || null, transferred: !!o.transferred,
+        createdAt: toMillis(o.createdAt), formData: o.formData || {}
+      });
     });
     res.json({ ok: true, count: employees.length, employees });
   } catch (e) {
     console.error("getEmployees error:", e);
+    res.status(500).json({ error: "server_error" });
+  }
+});
+
+// Back-office: update a submission's employee number / "transferred to שקלולית" flag.
+app.post("/api/updateEmployee", async (req, res) => {
+  const b = req.body || {};
+  const ADMIN = process.env.ADMIN_PASSWORD || "";
+  if (!ADMIN || b.key !== ADMIN) return res.status(401).json({ error: "unauthorized" });
+  const id = String(b.id || "").trim();
+  if (!id) return res.status(400).json({ error: "missing_id" });
+  const upd = {};
+  if (b.transferred !== undefined) upd.transferred = !!b.transferred;
+  if (b.employeeNumber !== undefined) upd.employeeNumber = Number(b.employeeNumber) || null;
+  if (!Object.keys(upd).length) return res.status(400).json({ error: "nothing_to_update" });
+  upd.updatedAt = admin.firestore.FieldValue.serverTimestamp();
+  try {
+    await admin.firestore().collection("contractSubmissions").doc(id).update(upd);
+    res.json({ ok: true });
+  } catch (e) {
+    console.error("updateEmployee error:", e);
     res.status(500).json({ error: "server_error" });
   }
 });
