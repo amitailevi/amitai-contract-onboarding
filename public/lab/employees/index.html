@@ -203,18 +203,31 @@ function closeModal(){ $('modal').classList.add('hidden'); }
 window.openEmp=openEmp; window.closeModal=closeModal;
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
 
+// Columns must match the שקלולית import template exactly (headers + order).
+const SHIK_HEADERS = ["מספר זהות","שם משפחה","שם פרטי","תאריך לידה","רחוב","בית","עיר","טל' נייד","Email","תאריך תחילת עבודה","מין","מצב משפחתי","בת/בן זוג - ת.ז.","בת/בן זוג - שם משפחה","בת/בן זוג - שם פרטי","בת/בן זוג - תאריך לידה","בת/בן זוג - תאריך עלייה","בת/בן זוג - עובד/ת","תאריך עלייה","ילד 1 - ת.ז.","ילד 1 - שם פרטי","ילד 1 - תאריך לידה","ילד 2 - ת.ז.","ילד 2 - שם פרטי","ילד 2 - תאריך לידה","ילד 3 - ת.ז.","ילד 3 - שם פרטי","ילד 3 - תאריך לידה","ילד 4 - ת.ז.","ילד 4 - שם פרטי","ילד 4 - תאריך לידה","ילד 5 - ת.ז.","ילד 5 - שם פרטי","ילד 5 - תאריך לידה","בנק-קוד בנק","בנק-קוד סניף","בנק-מספר חשבון"];
+const isoIl = v => { const m=String(v||'').match(/^(\d{4})-(\d{2})-(\d{2})/); return m?`${m[3]}/${m[2]}/${m[1]}`:String(v||''); };
+const nameParts = full => { const t=String(full||'').trim().split(/\s+/).filter(Boolean); return { first:t[0]||'', last:t.slice(1).join(' ') }; };
+const addrParts = a => { const s=String(a||'').trim(); const m=s.match(/^(.*?)[\s,\\/]*(\d+)\s*$/); return m?{ street:m[1].trim(), house:m[2] }:{ street:s, house:'' }; };
+function shikRow(e){
+  const fd=e.formData||{};
+  const en = (fd.firstName||fd.lastName) ? { first:fd.firstName||'', last:fd.lastName||'' } : nameParts(fd.contractEmployeeName);
+  const ad = addrParts(fd.contractEmployeeAddress), sp = nameParts(fd.spouseName);
+  return [
+    fd.contractEmployeeId, en.last, en.first, isoIl(fd.birthDate), ad.street, ad.house, fd.contractCity,
+    fd.mobile||fd.phone, fd.email||e.email, isoIl(fd.contractStartDate), fd.gender, fd.maritalStatus,
+    fd.spouseId, sp.last, sp.first, isoIl(fd.spouseBirthDate), '', '', isoIl(fd.immigrationDate),
+    fd.child1Id, fd.child1Name, isoIl(fd.child1BirthDate), fd.child2Id, fd.child2Name, isoIl(fd.child2BirthDate),
+    fd.child3Id, fd.child3Name, isoIl(fd.child3BirthDate), '','','', '','','',
+    fd.bankNumber, fd.branchNumber, fd.accountNumber
+  ].map(v => v==null ? '' : String(v));
+}
 function exportXlsx(){
   const chosen=employees.filter(e=>selected.has(e.id));
   if(!chosen.length){ alert('יש לבחור לפחות עובד/ת אחד/ת לייצוא (סמנו בתיבות שמימין, או "בחר/י הכל").'); return; }
-  const rows=chosen.map(e=>{
-    const fd=e.formData||{}; const row={};
-    row['תאריך הגשה']=fmtDate(e.createdAt);
-    GROUPS.forEach(g=>g.fields.forEach(([k,lbl])=>{ const v=fd[k]; row[lbl]= v===true?'כן':(v===false?'לא':(v==null?'':String(v))); }));
-    return row;
-  });
-  const ws=XLSX.utils.json_to_sheet(rows);
-  const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'עובדים');
-  XLSX.writeFile(wb, `employees-${new Date().toISOString().slice(0,10)}.xlsx`);
+  const aoa=[SHIK_HEADERS, ...chosen.map(shikRow)];
+  const ws=XLSX.utils.aoa_to_sheet(aoa);
+  const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'גליון1');
+  XLSX.writeFile(wb, `shiklulit-employees-${new Date().toISOString().slice(0,10)}.xlsx`);
 }
 window.exportXlsx=exportXlsx;
 </script>
