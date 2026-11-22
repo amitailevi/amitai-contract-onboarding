@@ -58,7 +58,7 @@ const BASE = {
   otherIncomeType: ['סוג ההכנסה האחרת', text],
   otherIncomeCredits: ['נקודות זיכוי לבקש כאן או אצל המעסיק האחר', oneOf('כאן', 'במעסיק האחר')],
   taxCoordination: ['בקשה לתיאום מס', yesNo],
-  spouseName: ['שם בן/בת הזוג', text], spouseBirthDate: ['תאריך לידה של בן/בת הזוג', date],
+  spouseName: ['שם מלא (פרטי ומשפחה) של בן/בת הזוג', text], spouseBirthDate: ['תאריך לידה של בן/בת הזוג', date],
   spouseImmigrationDate: ['תאריך עלייה של בן/בת הזוג', date],
   spouseHasIncome: ['לבן/בת הזוג יש הכנסה', oneOf('אין הכנסה', 'עבודה/קצבה/עסק', 'הכנסה אחרת')],
   childrenCount: ['מספר ילדים מתחת לגיל 19', count],
