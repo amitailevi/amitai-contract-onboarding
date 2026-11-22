@@ -5,7 +5,7 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import Anthropic from '@anthropic-ai/sdk';
-import { FIELDS, SECURE, CREDITS, validate, missing, consistency, prune, label, scrub } from './schema.mjs';
+import { FIELDS, SECURE, CREDITS, validate, missing, consistency, prune, label, scrub, enumHelp } from './schema.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const DATA = path.join(here, 'data');
@@ -33,7 +33,7 @@ const SYSTEM = `את/ה "מירי", עוזרת קליטה אנושית וחמה 
 const TOOLS = [
   {
     name: 'save_fields', strict: true,
-    description: 'שמירת פרטים שהעובד/ת מסר/ה. תאריכים בפורמט YYYY-MM-DD. נקודות זיכוי: "true"/"false".',
+    description: `שמירת פרטים שהעובד/ת מסר/ה. תאריכים בפורמט YYYY-MM-DD. נקודות זיכוי (credit*): "true"/"false". שדות ילדים: child1.inCustody / child1.allowance: כן|לא.\nערכים מותרים לשדות בחירה:\n${enumHelp()}`,
     input_schema: {
       type: 'object', additionalProperties: false, required: ['updates'],
       properties: { updates: { type: 'array', items: { type: 'object', additionalProperties: false, required: ['field', 'value'],

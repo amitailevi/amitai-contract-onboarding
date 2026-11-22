@@ -15,7 +15,7 @@ test('dates normalize and reject future/invalid', () => {
 });
 test('enums, phone, bank', () => {
   assert.equal(validate('gender', 'זכר').ok, true);
-  assert.equal(validate('gender', 'male').ok, false);
+  assert.equal(validate('gender', 'banana').ok, false);
   assert.equal(validate('mobile', '+972-52-123-4567').value, '0521234567');
   assert.equal(validate('branchNumber', '12').ok, false);
   assert.equal(validate('creditDischarged', 'true').value, true);
@@ -49,4 +49,13 @@ test('consistency + prune', () => {
   assert.equal(consistency(s).length, 2);
   const p = { fields: { childrenCount: 1, 'child1.name': 'א', 'child2.name': 'ב' }, secure: { 'child2.id': '1' } };
   prune(p); assert.deepEqual(Object.keys(p.fields), ['childrenCount', 'child1.name']); assert.deepEqual(p.secure, {});
+});
+test('enum aliases', () => {
+  assert.equal(validate('maritalStatus', 'נשואה').value, 'נשוי/אה');
+  assert.equal(validate('gender', 'male').value, 'זכר');
+  assert.equal(validate('isIsraeliResident', 'true').value, 'כן');
+  assert.equal(validate('otherIncome', 'כן').value, 'יש');
+  assert.equal(validate('otherIncomeCredits', 'אצל המעסיק האחר').value, 'במעסיק האחר');
+  assert.equal(validate('incomeType', 'משרה חלקית').value, 'משכורת חלקית');
+  assert.match(validate('gender', 'xyz').error, /זכר \| נקבה/);
 });

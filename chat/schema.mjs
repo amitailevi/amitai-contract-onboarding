@@ -18,7 +18,22 @@ const date = (v) => {
   const ok = dt.getUTCMonth() === mo - 1 && y > 1900 && dt <= new Date();
   return ok ? dt.toISOString().slice(0, 10) : null;
 };
-const oneOf = (...opts) => (v) => (opts.includes(String(v).trim()) ? String(v).trim() : null);
+// Enum with tolerant input: exact option, or any alias (Hebrew gender forms, English, true/false…).
+const ALIASES = {
+  'זכר': ['male', 'm', 'גבר', 'זכר'], 'נקבה': ['female', 'f', 'אישה', 'נקבה'],
+  'רווק/ה': ['רווק', 'רווקה', 'single'], 'נשוי/אה': ['נשוי', 'נשואה', 'נשוא/ה', 'married'],
+  'גרוש/ה': ['גרוש', 'גרושה', 'divorced'], 'אלמן/ה': ['אלמן', 'אלמנה', 'widowed'], 'פרוד/ה': ['פרוד', 'פרודה', 'separated'],
+  'כן': ['true', 'yes', 'y', '1'], 'לא': ['false', 'no', 'n', '0'],
+  'יש': ['כן', 'true', 'yes'], 'אין': ['לא', 'false', 'no'],
+  'כאן': ['פה', 'here', 'this', 'אצלכם', 'במעסיק הזה'], 'במעסיק האחר': ['אצל המעסיק האחר', 'מעסיק אחר', 'אצל מעסיק אחר', 'שם', 'other', 'other_employer'],
+  'משכורת חלקית': ['משרה חלקית', 'חלקית'], 'משכורת חודש': ['משכורת חודשית', 'חודשית', 'משרה מלאה'], 'שכר עבודה (יומי)': ['יומי', 'שעתי', 'לפי שעות'],
+  'מאשר/ת': ['מאשר', 'מאשרת', 'מצהיר', 'מצהירה', 'כן', 'true'],
+};
+const norm = (x) => String(x).trim().toLowerCase().replace(/[״"']/g, '');
+const oneOf = (...opts) => Object.assign((v) => {
+  const n = norm(v);
+  return opts.find((o) => norm(o) === n) ?? opts.find((o) => (ALIASES[o] || []).some((a) => norm(a) === n)) ?? null;
+}, { opts });
 const yesNo = oneOf('כן', 'לא');
 const text = (v) => { const s = String(v).trim(); return s.length >= 1 && s.length <= 120 ? s : null; };
 const digits = (min, max) => (v) => { const d = String(v).replace(/\D/g, ''); return d.length >= min && d.length <= max ? d : null; };
@@ -76,7 +91,7 @@ export function validate(field, value, secure = false) {
   const def = (secure ? SECURE : FIELDS)[field];
   if (!def) return { ok: false, error: `שדה לא מוכר: ${field}` };
   const v = def[1](value);
-  return v === null ? { ok: false, error: `ערך לא תקין ל${def[0]}` } : { ok: true, value: v };
+  return v === null ? { ok: false, error: `ערך לא תקין ל${def[0]}${def[1].opts ? ` — ערכים מותרים: ${def[1].opts.join(' | ')}` : ''}` } : { ok: true, value: v };
 }
 
 export function missing(s) {
@@ -122,3 +137,6 @@ export const scrub = (t) => String(t).normalize('NFKC').replace(/\p{Nd}(?:[\p{Nd
   if (d.length < 4 || /^(\+?972|0)5\d{8}$/.test(d) || /^\d{1,2}[.\/-]\d{1,2}[.\/-]\d{4}$/.test(m.trim()) || /^\d{4}-\d{1,2}-\d{1,2}$/.test(m.trim()) || /^(19|20)\d{2}$/.test(d)) return m;
   return '[מספר הוסתר]';
 });
+
+// Allowed values per enum field, for the tool description.
+export const enumHelp = () => Object.entries(FIELDS).filter(([k, [, f]]) => f.opts && !k.startsWith('child')).map(([k, [, f]]) => `${k}: ${f.opts.join(' | ')}`).join('\n');
