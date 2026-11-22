@@ -5,7 +5,7 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import Anthropic from '@anthropic-ai/sdk';
-import { FIELDS, SECURE, CREDITS, validate, missing, label, scrub } from './schema.mjs';
+import { FIELDS, SECURE, CREDITS, validate, missing, consistency, prune, label, scrub } from './schema.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const DATA = path.join(here, 'data');
@@ -25,7 +25,7 @@ const SYSTEM = `את/ה "מירי", עוזרת קליטה אנושית וחמה 
 - אם save_fields מחזיר שגיאה — בקשי את הפרט שוב בנימוס, הסבירי מה לא תקין.
 - לעולם אל תבקשי תעודת זהות או מספר חשבון בנק בצ'אט. לשדות האלה קראי ל-request_secure_input והמערכת תציג תיבה מאובטחת. אחרי הקריאה סיימי את התור במשפט קצר ("הזיני כאן בתיבה 👇").
 - אם מופיע בטקסט "[מספר הוסתר]" — העובד/ת הקליד/ה מספר רגיש בצ'אט; הסבירי שזה לא נשמר ובקשי דרך התיבה המאובטחת.
-- סדר מומלץ: שם → ת״ז → תאריך לידה ומין → טלפון וכתובת → מצב משפחתי, בן/בת זוג וילדים → תושבות/קופת חולים/קיבוץ → הכנסה מהמעסיק והכנסות אחרות → נקודות זיכוי רלוונטיות (שאלי רק על מה שרלוונטי לפי מה שידוע) → פרטי בנק.
+- סדר מומלץ: שם → ת״ז → תאריך לידה ומין → תאריך תחילת העבודה → טלפון וכתובת → מצב משפחתי, בן/בת זוג וילדים → תושבות/קופת חולים/קיבוץ → הכנסה מהמעסיק והכנסות אחרות → נקודות זיכוי רלוונטיות (שאלי רק על מה שרלוונטי לפי מה שידוע) → פרטי בנק → בסוף: בקשי מהעובד/ת לאשר במפורש "אני מצהיר/ה שהפרטים נכונים ומלאים" ושמרי declaration=מאשר/ת רק אחרי אישור מפורש.
 - נקודות זיכוי: שמרי כ-true רק מה שהעובד/ת אישר/ה במפורש.
 - כשנראה שהכול נאסף — קראי ל-finish. אם היא מחזירה שדות חסרים, המשיכי לשאול עליהם. אל תמציאי ערכים.
 - אל תחזרי על מספרים רגישים ואל תציגי פרטים של אחרים. אינך יועצת מס: לשאלות מס מורכבות — הפני למחלקת השכר.`;
@@ -48,9 +48,14 @@ const TOOLS = [
   { name: 'finish', strict: true, description: 'בדיקה שכל שדות החובה מלאים וסיום האיסוף.', input_schema: { type: 'object', additionalProperties: false, properties: {} } },
 ];
 
-const file = (sid) => path.join(DATA, `${sid.replace(/[^\w-]/g, '')}.json`);
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
+const file = (sid) => { if (!UUID.test(String(sid))) throw Object.assign(new Error('bad sid'), { code: 400 }); return path.join(DATA, `${sid}.json`); };
 const load = async (sid) => JSON.parse(await fs.readFile(file(sid), 'utf8'));
-const save = (s) => fs.writeFile(file(s.sid), JSON.stringify(s, null, 1));
+// Secure values live in this file only; 0600 so other users on the machine can't read it.
+const save = (s) => fs.writeFile(file(s.sid), JSON.stringify(s, null, 1), { mode: 0o600 });
+// One request at a time per session: avoids double-submits racing and losing updates.
+const locks = new Map();
+const locked = (sid, fn) => { const p = (locks.get(sid) || Promise.resolve()).then(fn, fn); locks.set(sid, p.catch(() => {})); return p; };
 
 function publicState(s) {
   const rows = Object.entries(s.fields).filter(([k]) => !(k in CREDITS)).map(([k, v]) => [label(k), v]);
@@ -66,6 +71,7 @@ function runTool(s, { name, input }) {
       const r = validate(field, value);
       r.ok ? (s.fields[field] = r.value) : errors.push(`${field}: ${r.error}`);
     }
+    prune(s);
     return errors.length ? { is_error: true, content: errors.join('\n') } : { content: 'נשמר' };
   }
   if (name === 'request_secure_input') {
@@ -73,31 +79,39 @@ function runTool(s, { name, input }) {
     return { content: 'התיבה מוצגת לעובד/ת. סיימי את התור והמתיני.' };
   }
   if (name === 'finish') {
-    const m = missing(s);
-    if (m.length) return { is_error: true, content: `חסרים: ${m.map(label).join(', ')}` };
-    s.done = true;
+    const m = missing(s).map(label), c = consistency(s);
+    if (m.length || c.length) return { is_error: true, content: [m.length && `חסרים: ${m.join(', ')}`, ...c].filter(Boolean).join('\n') };
+    s.finishOk = true;
     return { content: 'כל הפרטים נאספו. הודיעי לעובד/ת בחום שסיימנו ושיבדוק/תבדוק את הסיכום בצד המסך.' };
   }
   return { is_error: true, content: 'כלי לא מוכר' };
 }
 
 async function turn(s, userText) {
+  const mark = s.history.length;
   s.history.push({ role: 'user', content: userText });
   let reply = '';
+  s.finishOk = false;
   for (let i = 0; i < 8; i++) {
     const res = await client.beta.messages.create({
       model: 'claude-opus-5-5', max_tokens: 4000, system: SYSTEM, tools: TOOLS, messages: s.history,
       output_config: { effort: 'low' }, betas: ['server-side-fallback-2026-07-01'], fallbacks: 'default',
     });
+    // A refused turn is dropped so it doesn't poison the rest of the conversation.
+    if (res.stop_reason === 'refusal') { s.history.length = mark; reply = 'מצטערת, לא הצלחתי לעבד את זה. אפשר לנסח אחרת?'; break; }
+    const uses = res.content.filter((b) => b.type === 'tool_use');
+    // A turn cut off mid tool call would leave an unanswered tool_use and break every later request.
+    if (res.stop_reason !== 'tool_use' && uses.length) break;
     s.history.push({ role: 'assistant', content: res.content });
     reply += res.content.filter((b) => b.type === 'text').map((b) => b.text).join('\n');
-    if (res.stop_reason === 'refusal') { reply ||= 'מצטערת, לא הצלחתי לעבד את זה. נסה/י לנסח אחרת.'; break; }
-    if (res.stop_reason !== 'tool_use') break;
-    const results = res.content.filter((b) => b.type === 'tool_use').map((b) => ({ type: 'tool_result', tool_use_id: b.id, ...runTool(s, b) }));
-    s.history.push({ role: 'user', content: results });
+    if (!uses.length) break;
+    s.history.push({ role: 'user', content: uses.map((b) => ({ type: 'tool_result', tool_use_id: b.id, ...runTool(s, b) })) });
   }
+  // Done only if finish passed AND nothing later in the same turn reopened a requirement.
+  s.done = Boolean(s.finishOk) && !missing(s).length && !consistency(s).length;
+  if (s.done) s.widget = null;
   await save(s);
-  return { reply: reply.trim(), state: publicState(s) };
+  return { reply: reply.trim() || 'רגע, משהו התפספס אצלי. אפשר לכתוב שוב?', state: publicState(s) };
 }
 
 const body = (req) => new Promise((ok, no) => { let d = ''; req.on('data', (c) => (d += c, d.length > 1e5 && req.destroy())); req.on('end', () => { try { ok(JSON.parse(d || '{}')); } catch (e) { no(e); } }); });
@@ -108,25 +122,28 @@ const routes = {
     const s = { sid: crypto.randomUUID(), fields: {}, secure: {}, history: [], widget: null, done: false, created: new Date().toISOString() };
     return { sid: s.sid, ...(await turn(s, '[מערכת: העובד/ת פתח/ה את הקישור. פתחי בברכה קצרה והציגי את עצמך.]')) };
   },
-  async 'POST /api/chat'({ sid, text }) {
+  'POST /api/chat': ({ sid, text }) => locked(sid, async () => {
     const s = await load(sid);
-    if (!text?.trim() || s.done) return { state: publicState(s), reply: '' };
+    if (typeof text !== 'string' || !text.trim() || s.done) return { state: publicState(s), reply: '' };
     return turn(s, scrub(text).slice(0, 2000));
-  },
-  async 'POST /api/secure'({ sid, field, value }) {
+  }),
+  'POST /api/secure': ({ sid, field, value }) => locked(sid, async () => {
     const s = await load(sid);
-    if (s.widget?.field !== field) return { error: 'אין בקשה פתוחה לשדה הזה' };
+    if (s.done || s.widget?.field !== field) return { error: 'אין בקשה פתוחה לשדה הזה' };
     const r = validate(field, value, true);
     if (!r.ok) return { error: r.error };
     s.secure[field] = r.value; s.widget = null;
+    await save(s); // keep the validated value even if the model call below fails
     return turn(s, `[מערכת: ${label(field)} הוזן בתיבה המאובטחת ונמצא תקין.]`);
-  },
+  }),
   async 'POST /api/state'({ sid }) { return { state: publicState(await load(sid)) }; },
 };
 
 http.createServer(async (req, res) => {
   try {
     const route = routes[`${req.method} ${req.url}`];
+    // JSON only: blocks cross-site "simple" POSTs (text/plain, no preflight) from burning API credit.
+    if (route && !String(req.headers['content-type']).startsWith('application/json')) return send(res, 415, { error: 'json only' });
     if (route) return send(res, 200, await route(await body(req)));
     if (req.method === 'GET' && (req.url === '/' || req.url === '/index.html')) {
       res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
@@ -135,6 +152,6 @@ http.createServer(async (req, res) => {
     send(res, 404, { error: 'not found' });
   } catch (e) {
     console.error(e);
-    send(res, e instanceof Anthropic.APIError ? 502 : 500, { error: 'משהו השתבש, נסו שוב בעוד רגע' });
+    send(res, e.code === 400 || e.code === 'ENOENT' ? 400 : e instanceof Anthropic.APIError ? 502 : 500, { error: 'משהו השתבש, נסו שוב בעוד רגע' });
   }
-}).listen(process.env.PORT || 8787, () => console.log(`http://localhost:${process.env.PORT || 8787}`));
+}).listen(process.env.PORT || 8787, process.env.HOST || '127.0.0.1', () =>console.log(`http://localhost:${process.env.PORT || 8787}`));

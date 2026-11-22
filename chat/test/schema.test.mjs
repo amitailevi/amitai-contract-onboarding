@@ -33,3 +33,20 @@ test('scrub masks ids/accounts but keeps phones and dates', () => {
   assert.equal(scrub('הטלפון 052-123-4567'), 'הטלפון 052-123-4567');
   assert.equal(scrub('נולדתי ב 3/3/1986'), 'נולדתי ב 3/3/1986');
 });
+
+import { consistency, prune } from '../schema.mjs';
+test('review fixes: scrub variants, fake ids, counts, bank pad', () => {
+  for (const t of ['חשבון 12345', '123.456.782', '123/456/782', '١٢٣٤٥٦٧٨٢', '512345678']) assert.match(scrub(t), /הוסתר/, t);
+  assert.equal(scrub('נולדתי 1999-02-14'), 'נולדתי 1999-02-14');
+  assert.equal(scrub('+972 52 123 4567'), '+972 52 123 4567');
+  assert.equal(validate('employeeId', '000000000', true).ok, false);
+  assert.equal(validate('childrenCount', '').ok, false);
+  assert.equal(validate('childrenCount', '1e1').ok, false);
+  assert.equal(validate('bankNumber', '4').value, '04');
+});
+test('consistency + prune', () => {
+  const s = { fields: { maritalStatus: 'רווק/ה', creditSpouseNoIncome: true, childrenCount: 0, creditToddlers: true }, secure: {} };
+  assert.equal(consistency(s).length, 2);
+  const p = { fields: { childrenCount: 1, 'child1.name': 'א', 'child2.name': 'ב' }, secure: { 'child2.id': '1' } };
+  prune(p); assert.deepEqual(Object.keys(p.fields), ['childrenCount', 'child1.name']); assert.deepEqual(p.secure, {});
+});

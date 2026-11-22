@@ -2,7 +2,7 @@
 // then the stored fields are compared with the persona's ground truth.  Usage: node test/simulate.mjs
 import fs from 'node:fs/promises';
 import Anthropic from '@anthropic-ai/sdk';
-const URL = process.env.URL || 'http://localhost:8787', client = new Anthropic();
+const BASE = process.env.URL || 'http://localhost:8787', client = new Anthropic();
 const P = [
   { name: 'רווק פשוט', bio: 'דני כהן, זכר, נולד 14/02/1999, ת"ז 123456782, נייד 0521234567, גר ברחוב הרצל 5 תל אביב, רווק בלי ילדים, תושב ישראל, חבר מכבי, לא בקיבוץ, משכורת חודש, אין הכנסות אחרות, חייל משוחרר, בנק 12 סניף 345 חשבון 678901, החשבון על שמו.',
     expect: { firstName: 'דני', lastName: 'כהן', birthDate: '1999-02-14', maritalStatus: 'רווק/ה', childrenCount: 0, healthFund: 'מכבי', creditDischarged: true, bankNumber: '12', branchNumber: '345' } },
@@ -11,7 +11,7 @@ const P = [
   { name: 'עולה חדש עם שתי עבודות', bio: 'Alex Petrov — אלכס פטרוב, זכר, נולד 20/07/1990, עלה 01/03/2024, ת"ז 000000042, נייד 0501112233, רח׳ ויצמן 3 חיפה, רווק, אין ילדים, תושב, מאוחדת, משכורת נוספת (יש לו עבודה אחרת כמשכורת), רוצה נקודות זיכוי במעסיק האחר, לא רוצה תיאום מס, עולה חדש. בנק 11 סניף 101 חשבון 55667788. מנסה בהתחלה להקליד ת"ז בצ׳אט.',
     expect: { immigrationDate: '2024-03-01', otherIncome: 'יש', otherIncomeCredits: 'במעסיק האחר', taxCoordination: 'לא', creditImmigrant: true } },
 ];
-const post = (p, b) => fetch(URL + p, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(b) }).then((r) => r.json());
+const post = (p, b) => fetch(BASE + p, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(b) }).then((r) => r.json());
 async function employee(bio, transcript, widget) {
   const r = await client.messages.create({ model: 'claude-opus-5-5', max_tokens: 800, output_config: { effort: 'low' },
     system: `אתה משחק עובד חדש שעונה לבוט קליטה. הפרטים שלך: ${bio}\nענה בקצרה כמו אדם אמיתי, בעברית, רק על מה שנשאלת. ${widget ? `כעת מוצגת תיבה מאובטחת עבור "${widget}" — השב רק את הערך עצמו (ספרות בלבד).` : ''}`,

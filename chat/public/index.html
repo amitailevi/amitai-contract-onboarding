@@ -56,7 +56,7 @@ function render(st){
   $('#fin').innerHTML=st.done?'<div class="done">✓ כל הפרטים נקלטו. תודה!</div>':'';
   document.querySelector('.secure')?.remove();
   if(st.widget){const w=add('secure',`<label>🔒 ${esc(st.widget.label)}</label><small>נשמר במערכת בלבד, לא נשלח לצ׳אט</small><div class="row"><input inputmode="numeric" autocomplete="off"><button>אישור</button></div><div class="err"></div>`);
-    const i=w.querySelector('input'),go=async()=>{if(!i.value.trim())return;w.querySelector('button').disabled=true;const tp=busy(true);const r=await api('/api/secure',{sid,field:st.widget.field,value:i.value});busy(false);
+    const i=w.querySelector('input'),go=async()=>{if(!i.value.trim()||w.querySelector('button').disabled)return;w.querySelector('button').disabled=true;const tp=busy(true);const r=await api('/api/secure',{sid,field:st.widget.field,value:i.value});busy(false);
       if(r.error){w.querySelector('.err').textContent=r.error;w.querySelector('button').disabled=false;return}handle(r)};
     w.querySelector('button').onclick=go;i.onkeydown=e=>e.key==='Enter'&&go();setTimeout(()=>i.focus(),50)}
   if(st.done)$('#t').disabled=$('#s').disabled=true;
